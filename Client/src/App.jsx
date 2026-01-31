@@ -4,6 +4,7 @@ import AdminDashboard from './pages/admin/Dashboard';
 import EventEditor from './pages/admin/EventEditor';
 import Login from './pages/admin/Login';
 import PublicEventPage from './pages/public/EventLanding';
+import Home from './pages/public/Home';
 import './index.css';
 
 const ProtectedRoute = () => {
@@ -27,12 +28,8 @@ function App() {
           {/* Public Routes */}
           <Route path="/:slug" element={<PublicEventPage />} />
 
-          {/* Default Route Logic: 
-              If the user visits root /, we can redirect to login for now, 
-              or if the user intended a specific public event they go to /:slug directly.
-              Let's redirect / to /admin/login so they find the tool interface. 
-          */}
-          <Route path="/" element={<Navigate to="/admin/login" replace />} />
+          {/* Default Route: Public Home */}
+          <Route path="/" element={<Home />} />
         </Routes>
       </div>
     </Router>

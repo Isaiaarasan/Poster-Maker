@@ -7,7 +7,7 @@ const PublicEventPage = () => {
     const { slug } = useParams();
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [step, setStep] = useState(1); // 1: Identity, 2: Upload, 3: Preview, 4: Lead, 5: Result
+    const [step, setStep] = useState(1);
 
     // Form Data
     const [formData, setFormData] = useState({
@@ -20,7 +20,6 @@ const PublicEventPage = () => {
     });
     const [photoPreview, setPhotoPreview] = useState(null);
     const [generatedImage, setGeneratedImage] = useState(null);
-    const [renderProgress, setRenderProgress] = useState(0);
 
     const canvasRef = useRef(null);
 
@@ -58,9 +57,7 @@ const PublicEventPage = () => {
         if (file) {
             setFormData({ ...formData, photo: file });
             setPhotoPreview(URL.createObjectURL(file));
-            // Simulate processing
-            setRenderProgress(10);
-            setTimeout(() => setStep(3), 800);
+            setTimeout(() => setStep(3), 500); // Smooth auto-advance
         }
     };
 
@@ -71,7 +68,7 @@ const PublicEventPage = () => {
         const ctx = canvasRef.current.getContext('2d');
         const { config } = event;
 
-        // 1. Determine Background (Role specific or default)
+        // 1. Determine Background
         let bgUrl = config.backgroundImageUrl;
         if (formData.role) {
             const roleConfig = config.roles?.find(r => r.label === formData.role);
@@ -85,7 +82,6 @@ const PublicEventPage = () => {
         bgImg.src = bgUrl;
         await new Promise(resolve => bgImg.onload = resolve);
 
-        // Resolution: Low for preview, High for download
         const width = 1080;
         const height = 1920;
 
@@ -107,8 +103,6 @@ const PublicEventPage = () => {
             ctx.closePath();
             ctx.clip();
 
-            // Draw image centered/covered
-            // Using a simple cover algorithm
             const imgRatio = photoImg.width / photoImg.height;
             const targetSize = radius * 2;
             let renderW = targetSize;
@@ -120,8 +114,8 @@ const PublicEventPage = () => {
                 renderH = targetSize / imgRatio;
             }
 
-            const dx = x - (renderW / 2); // Center x
-            const dy = y - (renderH / 2); // Center y
+            const dx = x - (renderW / 2);
+            const dy = y - (renderH / 2);
 
             ctx.drawImage(photoImg, dx, dy, renderW, renderH);
             ctx.restore();
@@ -129,7 +123,7 @@ const PublicEventPage = () => {
 
         // 3. Draw Text
         const { typography } = config;
-        ctx.textAlign = 'center'; // Assuming center alignment for now
+        ctx.textAlign = 'center';
 
         if (formData.name && config.coordinates.name) {
             ctx.font = `700 ${typography.name.size}px "${typography.fontFamily}"`;
@@ -161,7 +155,6 @@ const PublicEventPage = () => {
         return canvasRef.current.toDataURL(quality === 'high' ? 'image/png' : 'image/jpeg', quality === 'high' ? 1.0 : 0.5);
     };
 
-    // Effect to render preview when entering Step 3
     useEffect(() => {
         if (step === 3) {
             generatePoster('low');
@@ -169,19 +162,15 @@ const PublicEventPage = () => {
     }, [step, formData.role, photoPreview]);
 
     const handleHighRes = async () => {
-        // Validation handles mainly in UI, but check mobile here
         if (!formData.mobile || !formData.designation) {
             alert('Please fill in required fields');
             return;
         }
 
-        setStep(5); // Show success/generating
+        setStep(5);
 
-        // Delay slightly for UI transition
-        // Delay slightly for UI transition
         setTimeout(async () => {
             try {
-                // 1. Upload User Photo if exists
                 let photoUrl = null;
                 if (formData.photo) {
                     const uploadData = new FormData();
@@ -192,26 +181,24 @@ const PublicEventPage = () => {
                     photoUrl = uploadRes.data.url;
                 }
 
-                // 2. Generate High Res Poster
                 const genRes = await axios.post(`/api/events/${slug}/generate`, {
                     ...formData,
-                    photoUrl // Send the cloud URL, not the file object
+                    photoUrl
                 });
 
                 const highResUrl = genRes.data.url;
                 setGeneratedImage(highResUrl);
 
-                // 3. Save Lead with final URL
                 await axios.post(`/api/events/${slug}/lead`, {
                     ...formData,
                     generatedImageUrl: highResUrl,
-                    photoUrl // optional: save user photo url too
+                    photoUrl
                 });
 
             } catch (error) {
                 console.error("High Res Generation Failed", error);
                 alert("Failed to generate high-res poster. Please try again.");
-                setStep(4); // Go back
+                setStep(4);
             }
         }, 500);
     };
@@ -225,235 +212,253 @@ const PublicEventPage = () => {
         }
     };
 
-    if (loading) return <div className="h-screen bg-gray-900 text-white flex items-center justify-center">Loading...</div>;
-    if (!event) return <div className="h-screen bg-gray-900 text-white flex items-center justify-center">Event not found</div>;
+    if (loading) return (
+        <div className="h-screen bg-bg-primary flex items-center justify-center">
+            <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    );
+
+    if (!event) return <div className="h-screen bg-black text-white flex items-center justify-center">Event not found</div>;
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white font-sans flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-bg-primary text-white font-sans flex flex-col md:flex-row overflow-hidden relative">
 
-            {/* Background Ambience */}
-            <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none" style={{ background: `radial-gradient(circle at 50% 50%, ${event.config.roles?.[0]?.color || '#4f46e5'}, #000)` }}></div>
+            {/* BACKGROUND ASSETS */}
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none z-0"></div>
+            <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-primary rounded-full blur-[150px] opacity-20 animate-pulse pointer-events-none"></div>
 
-            <div className="max-w-md w-full relative z-10">
-                <header className="text-center mb-8">
-                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 mb-2">{event.title}</h1>
-                    <p className="text-sm text-gray-500">Create your official badge</p>
-                </header>
+            {/* LEFT PANEL: Branding & Form */}
+            <div className="w-full md:w-1/2 p-8 md:p-12 relative z-10 flex flex-col justify-center min-h-screen">
+                <motion.div
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8 }}
+                >
+                    <header className="mb-12">
+                        <div className="inline-block px-3 py-1 bg-white/10 rounded-full text-[10px] uppercase font-bold tracking-widest mb-4 border border-white/5">
+                            Official Event Badge
+                        </div>
+                        <h1 className="text-5xl md:text-6xl font-extrabold mb-4 leading-tight">
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+                                {event.title}
+                            </span>
+                        </h1>
+                        <p className="text-slate-400 text-lg max-w-sm">
+                            Create your personalized digital access pass in seconds.
+                        </p>
+                    </header>
 
-                <AnimatePresence mode='wait'>
+                    <AnimatePresence mode='wait'>
+                        {/* STEP 1: IDENTITY */}
+                        {step === 1 && (
+                            <motion.div
+                                key="step1"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="space-y-6 max-w-md"
+                            >
+                                <div className="space-y-4">
+                                    {event.config.roles?.length > 0 && (
+                                        <div className="flex gap-2 mb-6">
+                                            {event.config.roles.map(r => (
+                                                <button
+                                                    key={r.label}
+                                                    onClick={() => setFormData({ ...formData, role: r.label })}
+                                                    className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${formData.role === r.label
+                                                            ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                                                            : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                                                        }`}
+                                                >
+                                                    {r.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
 
-                    {/* STEP 1: IDENTITY */}
-                    {step === 1 && (
-                        <motion.div
-                            key="step1"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="bg-gray-800/80 backdrop-blur border border-gray-700 p-6 rounded-2xl shadow-xl"
-                        >
-                            <h2 className="text-xl font-semibold mb-4">Who are you?</h2>
-
-                            {event.config.roles?.length > 0 && (
-                                <div className="mb-4">
-                                    <label className="block text-xs text-gray-400 uppercase mb-2">I am a...</label>
-                                    <div className="flex gap-2 flex-wrap">
-                                        {event.config.roles.map(r => (
-                                            <button
-                                                key={r.label}
-                                                onClick={() => setFormData({ ...formData, role: r.label })}
-                                                className={`px-4 py-2 rounded-lg text-sm transition-all border ${formData.role === r.label ? 'bg-blue-600 border-blue-500 text-white' : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'}`}
-                                            >
-                                                {r.label}
-                                            </button>
-                                        ))}
+                                    <div className="relative mb-6">
+                                        <label className="block text-xs font-semibold tracking-widest uppercase text-slate-400 mb-2">Full Name</label>
+                                        <input
+                                            name="name"
+                                            value={formData.name}
+                                            maxLength={event.config.validation.nameLimit}
+                                            onChange={handleInputChange}
+                                            className="w-full px-5 py-4 bg-black/40 border border-white/10 rounded-2xl text-white focus:outline-none focus:bg-black/60 focus:border-primary transition-all"
+                                            placeholder="Enter your name"
+                                        />
+                                    </div>
+                                    <div className="relative mb-6">
+                                        <label className="block text-xs font-semibold tracking-widest uppercase text-slate-400 mb-2">Company</label>
+                                        <input
+                                            name="company"
+                                            value={formData.company}
+                                            maxLength={event.config.validation.companyLimit}
+                                            onChange={handleInputChange}
+                                            className="w-full px-5 py-4 bg-black/40 border border-white/10 rounded-2xl text-white focus:outline-none focus:bg-black/60 focus:border-primary transition-all"
+                                            placeholder="Company Name"
+                                        />
                                     </div>
                                 </div>
-                            )}
+                                <button
+                                    onClick={() => setStep(2)}
+                                    disabled={!formData.name || !formData.company}
+                                    className="w-full inline-flex items-center justify-center px-8 py-4 rounded-2xl font-bold bg-gradient-to-r from-primary via-purple-600 to-secondary text-white shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Continue to Photo &rarr;
+                                </button>
+                            </motion.div>
+                        )}
 
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs text-gray-400 uppercase mb-1">Full Name</label>
-                                    <input
-                                        name="name"
-                                        value={formData.name}
-                                        maxLength={event.config.validation.nameLimit}
-                                        onChange={handleInputChange}
-                                        placeholder="Enter your name"
-                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 focus:border-blue-500 focus:outline-none transition-colors"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-gray-400 uppercase mb-1">Company / Organization</label>
-                                    <input
-                                        name="company"
-                                        value={formData.company}
-                                        maxLength={event.config.validation.companyLimit}
-                                        onChange={handleInputChange}
-                                        placeholder="Where do you work?"
-                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 focus:border-blue-500 focus:outline-none transition-colors"
-                                    />
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => setStep(2)}
-                                disabled={!formData.name || !formData.company}
-                                className="w-full mt-8 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        {/* STEP 2: UPLOAD */}
+                        {step === 2 && (
+                            <motion.div
+                                key="step2"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="max-w-md"
                             >
-                                Next &rarr;
-                            </button>
-                        </motion.div>
-                    )}
+                                <label className="block w-full aspect-square md:aspect-video border-2 border-dashed border-white/20 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 hover:bg-white/5 transition-all group relative overflow-hidden">
+                                    <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
 
-                    {/* STEP 2: UPLOAD */}
-                    {step === 2 && (
-                        <motion.div
-                            key="step2"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="bg-gray-800/80 backdrop-blur border border-gray-700 p-6 rounded-2xl shadow-xl text-center"
-                        >
-                            <h2 className="text-xl font-semibold mb-2">Upload Photo</h2>
-                            <p className="text-gray-400 text-sm mb-6">A clear selfie or headshot works best.</p>
+                                    <div className="absolute inset-0 bg-indigo-500/10 scale-0 group-hover:scale-100 transition-transform rounded-3xl duration-500"></div>
 
-                            <label className="block w-full border-2 border-dashed border-gray-600 rounded-2xl p-8 cursor-pointer hover:border-blue-500 hover:bg-gray-700/50 transition-all group">
-                                <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-                                <div className="text-4xl mb-4 opacity-50 group-hover:opacity-100 transition-opacity">📸</div>
-                                <div className="text-sm font-medium">Tap to Select Photo</div>
-                            </label>
-
-                            <button onClick={() => setStep(1)} className="mt-6 text-gray-500 text-sm hover:text-white">Back</button>
-                        </motion.div>
-                    )}
-
-                    {/* STEP 3: PREVIEW */}
-                    {step === 3 && (
-                        <motion.div
-                            key="step3"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 1.05 }}
-                            className="flex flex-col items-center"
-                        >
-                            <div className="relative w-64 aspect-[9/16] bg-black rounded-lg shadow-2xl overflow-hidden mb-6 border border-gray-700">
-                                <canvas ref={canvasRef} className="w-full h-full object-contain" />
-                            </div>
-
-                            <div className="w-full flex gap-3">
-                                <button onClick={() => setStep(1)} className="flex-1 bg-gray-700 py-3 rounded-xl font-medium text-sm">Edit Text</button>
-                                <button onClick={() => setStep(2)} className="flex-1 bg-gray-700 py-3 rounded-xl font-medium text-sm">Change Photo</button>
-                            </div>
-
-                            <button
-                                onClick={() => setStep(4)}
-                                className="w-full mt-3 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-900/50"
-                            >
-                                Get High-Res Poster
-                            </button>
-                        </motion.div>
-                    )}
-
-                    {/* STEP 4: LEAD CAPTURE */}
-                    {step === 4 && (
-                        <motion.div
-                            key="step4"
-                            initial={{ opacity: 0, y: 50 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -50 }}
-                            className="bg-gray-800/80 backdrop-blur border border-gray-700 p-6 rounded-2xl shadow-xl"
-                        >
-                            <h2 className="text-xl font-semibold mb-2">Final Step</h2>
-                            <p className="text-gray-400 text-sm mb-6">Where should we send your updates?</p>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs text-gray-400 uppercase mb-1">Designation / Job Title</label>
-                                    <input
-                                        name="designation"
-                                        value={formData.designation}
-                                        onChange={handleInputChange}
-                                        placeholder="e.g. CEO, Developer"
-                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 focus:border-blue-500 focus:outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-gray-400 uppercase mb-1">Mobile Number</label>
-                                    <input
-                                        name="mobile"
-                                        value={formData.mobile}
-                                        onChange={handleInputChange}
-                                        placeholder="+91 99999 99999"
-                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 focus:border-blue-500 focus:outline-none"
-                                    />
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={handleHighRes}
-                                disabled={!formData.mobile || !formData.designation}
-                                className="w-full mt-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 text-white font-bold py-4 rounded-xl shadow-xl disabled:opacity-50"
-                            >
-                                Unlock Download
-                            </button>
-                        </motion.div>
-                    )}
-
-                    {/* STEP 5: SUCCESS */}
-                    {step === 5 && (
-                        <motion.div
-                            key="step5"
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="text-center"
-                        >
-                            {!generatedImage ? (
-                                <div className="py-20">
-                                    <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                                    <p className="text-gray-400">Rendering High-Res (300DPI)...</p>
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="relative w-64 aspect-[9/16] bg-black rounded-lg shadow-2xl overflow-hidden mb-6 mx-auto border border-gray-700">
-                                        <img src={generatedImage} alt="Final Poster" className="w-full h-full object-contain" />
+                                    <div className="relative z-10 text-center p-8">
+                                        <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                            <svg className="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                        </div>
+                                        <h3 className="text-xl font-bold mb-2">Upload Profile Photo</h3>
+                                        <p className="text-slate-400 text-sm">Supports JPG, PNG (Max 5MB)</p>
                                     </div>
+                                </label>
+                                <button onClick={() => setStep(1)} className="w-full mt-4 text-slate-400 hover:text-white transition-colors py-2">Back</button>
+                            </motion.div>
+                        )}
 
-                                    <h2 className="text-xl font-bold text-white mb-2">Poster Ready!</h2>
-                                    <p className="text-gray-400 text-sm mb-6">Share it with your network.</p>
+                        {/* STEP 3 & 4: DETAILS & PREVIEW Logic */}
+                        {(step === 3 || step === 4) && (
+                            <motion.div
+                                key="step3"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="max-w-md space-y-6"
+                            >
+                                <h3 className="text-2xl font-bold">Final Details</h3>
+                                <div className="space-y-4">
+                                    <div className="relative mb-6">
+                                        <label className="block text-xs font-semibold tracking-widest uppercase text-slate-400 mb-2">Designation</label>
+                                        <input
+                                            name="designation"
+                                            value={formData.designation}
+                                            onChange={handleInputChange}
+                                            placeholder="e.g. CEO, Developer"
+                                            className="w-full px-5 py-4 bg-black/40 border border-white/10 rounded-2xl text-white focus:outline-none focus:bg-black/60 focus:border-primary transition-all"
+                                        />
+                                    </div>
+                                    <div className="relative mb-6">
+                                        <label className="block text-xs font-semibold tracking-widest uppercase text-slate-400 mb-2">WhatsApp Number</label>
+                                        <input
+                                            name="mobile"
+                                            value={formData.mobile}
+                                            onChange={handleInputChange}
+                                            placeholder="+91..."
+                                            className="w-full px-5 py-4 bg-black/40 border border-white/10 rounded-2xl text-white focus:outline-none focus:bg-black/60 focus:border-primary transition-all"
+                                        />
+                                    </div>
+                                </div>
 
-                                    <div className="flex flex-col gap-3">
-                                        <button
-                                            onClick={handleDownload}
-                                            className="w-full bg-white text-black font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors"
-                                        >
-                                            Download Image
-                                        </button>
+                                <div className="flex gap-4 pt-4">
+                                    <button onClick={() => setStep(2)} className="flex-1 px-6 py-4 rounded-xl font-semibold border border-white/10 hover:bg-white/5 text-white transition-all">Back</button>
+                                    <button
+                                        onClick={handleHighRes}
+                                        disabled={!formData.mobile || !formData.designation}
+                                        className="flex-1 px-6 py-4 rounded-xl font-bold bg-gradient-to-r from-primary via-purple-600 to-secondary text-white shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] text-center disabled:opacity-50"
+                                    >
+                                        Generate Badge
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
 
-                                        <div className="flex gap-3">
-                                            <button className="flex-1 bg-green-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-green-700" onClick={() => window.open(`whatsapp://send?text=Check out my badge for ${event.title}!`, '_blank')}>
-                                                WhatsApp
+                        {/* STEP 5: SUCCESS */}
+                        {step === 5 && (
+                            <motion.div
+                                key="step5"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="max-w-md text-center"
+                            >
+                                {!generatedImage ? (
+                                    <div className="py-20 flex flex-col items-center">
+                                        <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+                                        <h3 className="text-xl font-bold animate-pulse">Forging Digital Identity...</h3>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-6">
+                                        <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">
+                                            Badge Ready!
+                                        </h2>
+                                        <p className="text-slate-400">Your pass has been generated securely.</p>
+
+                                        <div className="grid grid-cols-1 gap-3">
+                                            <button onClick={handleDownload} className="w-full py-4 rounded-xl font-bold bg-white text-black hover:bg-slate-200 transition-colors">
+                                                Download Image
                                             </button>
-                                            <button className="flex-1 bg-blue-500 text-white py-3 rounded-xl font-semibold text-sm hover:bg-blue-600" onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Link Copied!'))}>
-                                                Copy Link
-                                            </button>
+                                            <div className="flex gap-3">
+                                                <button className="flex-1 py-4 rounded-xl font-bold bg-[#25D366] hover:bg-[#128C7E] text-white transition-colors" onClick={() => window.open(`whatsapp://send?text=Just got my badge for ${event.title}!`, '_blank')}>
+                                                    Share
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </>
-                            )}
-                        </motion.div>
-                    )}
-
-                </AnimatePresence>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </motion.div>
             </div>
 
-            {/* Sponsors Footer */}
-            {event.config.sponsors?.length > 0 && step !== 3 && (
-                <div className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black to-transparent flex justify-center gap-6 pointer-events-none z-0">
-                    {event.config.sponsors.map((s, i) => s.visible && (
-                        <img key={i} src={s.imageUrl} alt="Sponsor" className="h-8 object-contain opacity-60 grayscale" />
-                    ))}
+            {/* RIGHT PANEL: Live Preview */}
+            <div className="hidden md:flex w-1/2 bg-[#050510] relative items-center justify-center p-12 overflow-hidden">
+                <div className="absolute inset-0 bg-indigo-500/5 blur-3xl"></div>
+
+                {/* Floating Preview Card */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.8, rotateY: -15 }}
+                    animate={{
+                        opacity: step >= 3 || generatedImage ? 1 : 0.5,
+                        scale: step >= 3 || generatedImage ? 1 : 0.9,
+                        rotateY: step >= 3 ? 0 : -10
+                    }}
+                    transition={{ type: "spring", stiffness: 100 }}
+                    style={{ perspective: 1000 }}
+                    className="relative z-10 w-full max-w-[400px] aspect-[9/16] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/10"
+                >
+                    {/* Placeholder for before upload */}
+                    {!photoPreview && !generatedImage && (
+                        <div className="absolute inset-0 bg-white/5 flex flex-col items-center justify-center text-white/20">
+                            <div className="text-6xl mb-4">🔮</div>
+                            <p className="font-mono text-sm tracking-widest uppercase">Preview Mode</p>
+                        </div>
+                    )}
+
+                    {/* Canvas / Final Image */}
+                    {generatedImage ? (
+                        <img src={generatedImage} alt="Final" className="w-full h-full object-cover" />
+                    ) : (
+                        <canvas
+                            ref={canvasRef}
+                            className={`w-full h-full object-contain ${!photoPreview && 'opacity-0'}`}
+                        />
+                    )}
+                </motion.div>
+
+                {/* Decorative Elements */}
+                <div className="absolute bottom-10 right-10 text-right opacity-30">
+                    <p className="font-mono text-xs text-indigo-400">SECURE RENDER_PIPELINE_V1</p>
+                    <p className="font-mono text-xs text-indigo-400">300 DPI // CMYK READY</p>
                 </div>
-            )}
+            </div>
         </div>
     );
 };
