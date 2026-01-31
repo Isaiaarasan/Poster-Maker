@@ -2,30 +2,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 @theme {
-  --color-primary: #000000;
-  --color-primary-light: #333333;
-  --color-primary-dark: #000000;
-  --color-secondary: #ffffff;
-  --color-accent: #666666;
+  --color-primary: #ffffff;
+  --color-primary-light: #f3f4f6;
+  --color-primary-dark: #e5e7eb;
+  --color-secondary: #000000;
+  --color-accent: #111111;
 
-  --color-bg-primary: #000000;
-  --color-bg-secondary: #111111;
-  --color-bg-tertiary: #1a1a1a;
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
 }
 
 body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--color-bg-primary);
-  color: white;
+  color: black;
 }
 
-/* Glassmorphism Utilities Override for B&W */
+/* Glassmorphism Utilities White Theme */
 .card-glass {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
 }
 
 /* Animations */
@@ -47,11 +47,11 @@ body {
 
   0%,
   100% {
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
   }
 
   50% {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -73,14 +73,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #000;
+  background: #f1f1f1;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: #ccc;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #999;
 }

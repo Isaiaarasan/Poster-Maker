@@ -26,33 +26,33 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4 relative overflow-hidden text-slate-200">
+        <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4 relative overflow-hidden text-slate-800">
             {/* Background Effects */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-primary opacity-20 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-accent opacity-15 rounded-full blur-3xl"></div>
+                <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-black opacity-5 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-black opacity-5 rounded-full blur-3xl"></div>
             </div>
 
             <div className="w-full max-w-md relative z-10">
                 {/* Header */}
                 <div className="text-center mb-8 animate-[fadeIn_0.5s_ease-out]">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-r from-primary to-secondary shadow-[0_0_20px_rgba(99,102,241,0.5)] mb-4">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-black shadow-lg shadow-black/20 mb-4">
                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                     </div>
-                    <h2 className="text-3xl font-bold mb-2 text-white">Admin Access</h2>
-                    <p className="text-slate-400">Sign in to manage your events</p>
+                    <h2 className="text-3xl font-bold mb-2 text-black">Admin Access</h2>
+                    <p className="text-slate-500">Sign in to manage your events</p>
                 </div>
 
                 {/* Login Card */}
-                <div className="bg-bg-secondary/60 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] rounded-3xl p-8 relative animate-[slideUp_0.5s_ease-out]">
+                <div className="bg-white/80 backdrop-blur-2xl border border-white/50 shadow-xl rounded-3xl p-8 relative animate-[slideUp_0.5s_ease-out]">
                     <form onSubmit={handleLogin} className="space-y-6">
                         <div className="relative">
-                            <label className="block text-xs font-semibold tracking-widest uppercase text-slate-400 mb-2">Username</label>
+                            <label className="block text-xs font-semibold tracking-widest uppercase text-slate-500 mb-2">Username</label>
                             <input
                                 type="text"
-                                className="w-full px-5 py-4 bg-black/40 border border-white/10 rounded-2xl text-white focus:outline-none focus:bg-black/60 focus:border-primary transition-all disabled:opacity-50"
+                                className="w-full px-5 py-4 bg-slate-50 border border-black/10 rounded-2xl text-black focus:outline-none focus:bg-white focus:border-black transition-all disabled:opacity-50"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 placeholder="Enter username"
@@ -62,10 +62,10 @@ const Login = () => {
                         </div>
 
                         <div className="relative">
-                            <label className="block text-xs font-semibold tracking-widest uppercase text-slate-400 mb-2">Password</label>
+                            <label className="block text-xs font-semibold tracking-widest uppercase text-slate-500 mb-2">Password</label>
                             <input
                                 type="password"
-                                className="w-full px-5 py-4 bg-black/40 border border-white/10 rounded-2xl text-white focus:outline-none focus:bg-black/60 focus:border-primary transition-all disabled:opacity-50"
+                                className="w-full px-5 py-4 bg-slate-50 border border-black/10 rounded-2xl text-black focus:outline-none focus:bg-white focus:border-black transition-all disabled:opacity-50"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Enter password"
@@ -87,7 +87,7 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={loading || !username || !password}
-                            className="w-full inline-flex items-center justify-center px-8 py-4 rounded-2xl font-bold bg-gradient-to-r from-primary via-purple-600 to-secondary text-white shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full inline-flex items-center justify-center px-8 py-4 rounded-2xl font-bold bg-black text-white shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? (
                                 <>
@@ -116,7 +116,7 @@ const Login = () => {
                     <button
                         type="button"
                         onClick={() => navigate('/')}
-                        className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+                        className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold text-slate-500 hover:text-black hover:bg-slate-100 transition-all"
                         disabled={loading}
                     >
                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,11 +127,11 @@ const Login = () => {
                 </div>
 
                 {/* Demo Credentials */}
-                <div className="mt-6 p-4 rounded-xl bg-bg-tertiary border border-white/5">
-                    <p className="text-xs text-slate-400 text-center mb-2">Demo Credentials</p>
-                    <div className="flex justify-center gap-4 text-xs text-slate-300">
-                        <span>Username: <code className="text-primary-light">admin</code></span>
-                        <span>Password: <code className="text-primary-light">admin123</code></span>
+                <div className="mt-6 p-4 rounded-xl bg-white border border-black/5 shadow-sm">
+                    <p className="text-xs text-slate-500 text-center mb-2">Demo Credentials</p>
+                    <div className="flex justify-center gap-4 text-xs text-slate-600">
+                        <span>Username: <code className="text-black bg-slate-100 px-1 rounded">admin</code></span>
+                        <span>Password: <code className="text-black bg-slate-100 px-1 rounded">admin123</code></span>
                     </div>
                 </div>
             </div>
