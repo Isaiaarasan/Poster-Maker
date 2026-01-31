@@ -26,6 +26,7 @@ connectDB();
 
 // Routes
 app.use('/api/templates', require('./routes/templates'));
+app.use('/api/events', require('./routes/events'));
 
 // Basic route for testing
 app.get('/', (req, res) => {
