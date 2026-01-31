@@ -113,20 +113,25 @@ router.put('/:id/config', upload.fields([{ name: 'background', maxCount: 1 }, { 
             roles
         } = req.body;
 
-        if (coordinates) event.config.coordinates = JSON.parse(coordinates);
-        if (typography) event.config.typography = JSON.parse(typography);
+        if (coordinates) {
+            event.config.coordinates = JSON.parse(coordinates);
+            event.markModified('config.coordinates');
+        }
+        if (typography) {
+            event.config.typography = JSON.parse(typography);
+            event.markModified('config.typography');
+        }
         if (validation) event.config.validation = JSON.parse(validation);
         if (status) event.status = status;
         if (sponsors) event.config.sponsors = JSON.parse(sponsors);
         if (roles) event.config.roles = JSON.parse(roles);
-        // Sponsors logic if needed
 
         await event.save();
         res.json(event);
 
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server Error' });
+        console.error("Config Update Error:", err);
+        res.status(500).json({ message: 'Server Error: ' + err.message });
     }
 });
 

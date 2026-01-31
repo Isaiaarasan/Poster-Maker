@@ -60,7 +60,7 @@ async function generatePoster(config, data) {
         const { typography, coordinates } = config;
 
         // Simple sanitization
-        const escapeXml = (unsafe) => unsafe.replace(/[<>&'"]/g, c => {
+        const escapeXml = (unsafe) => unsafe ? String(unsafe).replace(/[<>&'"]/g, c => {
             switch (c) {
                 case '<': return '&lt;';
                 case '>': return '&gt;';
@@ -68,24 +68,33 @@ async function generatePoster(config, data) {
                 case '\'': return '&apos;';
                 case '"': return '&quot;';
             }
+        }) : '';
+
+        // Generate Text Elements Dynamically based on configured Coordinates
+        let textElements = '';
+        const styles = [];
+
+        Object.keys(coordinates).forEach(key => {
+            if (key === 'photo') return; // Skip photo
+            if (!coordinates[key]) return;
+
+            // Get value from data
+            const textValue = escapeXml(data[key] || '');
+            if (!textValue) return;
+
+            const style = typography[key] || { size: 24, color: '#000000' };
+
+            styles.push(`.${key} { fill: ${style.color}; font-family: ${typography.fontFamily}, sans-serif; font-size: ${style.size}px; font-weight: ${key === 'name' ? 'bold' : 'normal'}; text-anchor: middle; }`);
+
+            textElements += `<text x="${coordinates[key].x}" y="${coordinates[key].y}" class="${key}">${textValue}</text>\n`;
         });
 
-        const name = escapeXml(data.name || '');
-        const designation = escapeXml(data.designation || '');
-        const company = escapeXml(data.company || '');
-
-        // Construct SVG for text overlay
-        // We use absolute positioning inside the SVG to match the canvas coordinates
         const svgText = `
         <svg width="${width}" height="${height}">
             <style>
-                .name { fill: ${typography.name.color}; font-family: ${typography.fontFamily}, sans-serif; font-size: ${typography.name.size}px; font-weight: bold; text-anchor: middle; }
-                .designation { fill: ${typography.designation.color}; font-family: ${typography.fontFamily}, sans-serif; font-size: ${typography.designation.size}px; text-anchor: middle; }
-                .company { fill: ${typography.company.color}; font-family: ${typography.fontFamily}, sans-serif; font-size: ${typography.company.size}px; text-anchor: middle; }
+                ${styles.join('\n')}
             </style>
-            ${name ? `<text x="${coordinates.name.x}" y="${coordinates.name.y}" class="name">${name}</text>` : ''}
-            ${designation ? `<text x="${coordinates.designation.x}" y="${coordinates.designation.y}" class="designation">${designation}</text>` : ''}
-            ${company ? `<text x="${coordinates.company.x}" y="${coordinates.company.y}" class="company">${company}</text>` : ''}
+            ${textElements}
         </svg>
         `;
 
@@ -106,8 +115,6 @@ async function generatePoster(config, data) {
         // Add Watermark
         if (config.watermarkUrl) {
             const wmBuffer = await fetchImageBuffer(config.watermarkUrl);
-            // Access resizing if needed, or assume watermark is pre-sized to 1080x1920
-            // Assuming watermark is full overlay for now
             composites.push({
                 input: wmBuffer,
                 top: 0,
@@ -123,11 +130,10 @@ async function generatePoster(config, data) {
         });
 
         // 5. Final Merge
-        // Resize BG to standard 1080x1920 just in case
         const finalImageBuffer = await sharp(bgBuffer)
             .resize(width, height)
             .composite(composites)
-            .png() // High quality PNG
+            .png()
             .toBuffer();
 
         return finalImageBuffer;

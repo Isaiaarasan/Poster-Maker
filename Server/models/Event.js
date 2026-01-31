@@ -18,39 +18,23 @@ const EventSchema = new mongoose.Schema({
 
         // Coordinate Mapping
         coordinates: {
-            photo: {
-                x: { type: Number, default: 0 },
-                y: { type: Number, default: 0 },
-                radius: { type: Number, default: 100 }
-            },
-            name: {
-                x: { type: Number, default: 0 },
-                y: { type: Number, default: 0 }
-            },
-            designation: {
-                x: { type: Number, default: 0 },
-                y: { type: Number, default: 0 }
-            },
-            company: {
-                x: { type: Number, default: 0 },
-                y: { type: Number, default: 0 }
+            type: Object,
+            default: {
+                photo: { x: 0, y: 0, radius: 100 },
+                name: { x: 0, y: 0 },
+                designation: { x: 0, y: 0 },
+                company: { x: 0, y: 0 }
             }
         },
 
         // Typography Locking
         typography: {
-            fontFamily: { type: String, default: 'Arial' },
-            name: {
-                size: { type: Number, default: 40 },
-                color: { type: String, default: '#000000' }
-            },
-            designation: {
-                size: { type: Number, default: 24 },
-                color: { type: String, default: '#555555' }
-            },
-            company: {
-                size: { type: Number, default: 24 },
-                color: { type: String, default: '#555555' }
+            type: Object,
+            default: {
+                fontFamily: 'Arial',
+                name: { size: 40, color: '#000000' },
+                designation: { size: 24, color: '#555555' },
+                company: { size: 24, color: '#555555' }
             }
         },
 
