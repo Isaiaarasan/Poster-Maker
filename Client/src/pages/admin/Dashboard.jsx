@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { FaPlus, FaUsers, FaChartLine, FaCalendarCheck } from 'react-icons/fa';
 
 const Dashboard = () => {
     const [events, setEvents] = useState([]);
@@ -37,177 +38,118 @@ const Dashboard = () => {
         }
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('isAdmin');
-        navigate('/admin/login');
-    };
-
-    const getStatusBadge = (status) => {
-        const styles = {
-            draft: 'bg-slate-100 text-slate-500 border-slate-200',
-            published: 'bg-green-50 text-green-600 border-green-200',
-            archived: 'bg-gray-100 text-gray-500 border-gray-200'
-        };
-        return (
-            <span className={`px-3 py-1 rounded-full text-xs font-medium border ${styles[status] || styles.draft}`}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-            </span>
-        );
-    };
+    const stats = [
+        {
+            label: 'Total Events',
+            value: events.length,
+            icon: <FaCalendarCheck />,
+            color: 'from-blue-500 to-cyan-400',
+            bg: 'bg-blue-500/10 text-blue-400'
+        },
+        {
+            label: 'Total Leads',
+            value: events.reduce((acc, e) => acc + (e.leads?.length || 0), 0),
+            icon: <FaUsers />,
+            color: 'from-purple-500 to-pink-400',
+            bg: 'bg-purple-500/10 text-purple-400'
+        },
+        {
+            label: 'Published',
+            value: events.filter(e => e.status === 'published').length,
+            icon: <FaChartLine />,
+            color: 'from-green-500 to-emerald-400',
+            bg: 'bg-green-500/10 text-green-400'
+        },
+    ];
 
     return (
-        <div className="min-h-screen bg-bg-primary text-slate-800">
-            {/* Header */}
-            <header className="bg-white border-b border-black/5 sticky top-0 z-30">
-                <div className="container mx-auto px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center shadow-lg shadow-black/20">
-                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-bold text-black">Event Dashboard</h1>
-                                <p className="text-xs text-slate-500">Manage your poster events</p>
-                            </div>
-                        </div>
-                        <button onClick={handleLogout} className="px-3 py-2 rounded-lg text-sm text-slate-500 hover:text-black hover:bg-slate-100 transition-colors flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            Logout
-                        </button>
-                    </div>
+        <div className="space-y-8">
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+                    <p className="text-slate-400">Here's what's happening with your events today.</p>
                 </div>
-            </header>
+                <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="px-6 py-3 rounded-xl font-bold bg-white text-black hover:bg-slate-200 transition-all shadow-lg shadow-white/5 flex items-center justify-center gap-2"
+                >
+                    <FaPlus /> Create New Event
+                </button>
+            </div>
 
-            {/* Main Content */}
-            <main className="container mx-auto px-6 py-8">
-                {/* Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white border border-black/5 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-500 mb-1">Total Events</p>
-                                <p className="text-3xl font-bold text-black">{events.length}</p>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {stats.map((stat, i) => (
+                    <div key={i} className="card-glass rounded-2xl p-6 relative overflow-hidden group">
+                        <div className={`absolute top-0 right-0 p-4 opacity-50 text-6xl group-hover:scale-110 transition-transform duration-500 bg-gradient-to-br ${stat.color} bg-clip-text text-transparent`}>
+                            {stat.icon}
+                        </div>
+                        <div className="relative z-10">
+                            <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center text-xl mb-4`}>
+                                {stat.icon}
                             </div>
-                            <div className="w-12 h-12 rounded-xl bg-black/5 flex items-center justify-center">
-                                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
+                            <p className="text-slate-400 text-sm font-medium uppercase tracking-wider">{stat.label}</p>
+                            <h3 className="text-4xl font-bold text-white mt-1">{stat.value}</h3>
                         </div>
                     </div>
-                    <div className="bg-white border border-black/5 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-500 mb-1">Published</p>
-                                <p className="text-3xl font-bold text-black">{events.filter(e => e.status === 'published').length}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
-                                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white border border-black/5 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-slate-500 mb-1">Total Leads</p>
-                                <p className="text-3xl font-bold text-black">{events.reduce((acc, e) => acc + (e.leads?.length || 0), 0)}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-xl bg-black/5 flex items-center justify-center">
-                                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                ))}
+            </div>
 
-                {/* Events Section */}
+            {/* Recent Events Section */}
+            <div>
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-black">Your Events</h2>
-                    <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="px-6 py-3 rounded-xl font-bold bg-black text-white shadow-lg shadow-black/10 hover:shadow-black/20 hover:-translate-y-1 transition-all flex items-center gap-2"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Create Event
-                    </button>
+                    <h2 className="text-xl font-bold text-white">Recent Events</h2>
+                    <button onClick={() => navigate('/admin/events')} className="text-sm text-primary hover:text-white transition-colors">View All</button>
                 </div>
 
-                {/* Events List */}
                 {loading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <div className="w-10 h-10 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
-                    </div>
+                    <div className="text-center py-12 text-slate-500">Loading...</div>
                 ) : events.length === 0 ? (
-                    <div className="bg-white border border-black/5 rounded-2xl p-12 text-center shadow-sm">
-                        <div className="w-16 h-16 rounded-2xl bg-black/5 mx-auto mb-4 flex items-center justify-center">
-                            <svg className="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                            </svg>
-                        </div>
-                        <h3 className="text-xl font-semibold mb-2 text-black">No events yet</h3>
-                        <p className="text-slate-500 mb-6">Create your first event to get started</p>
-                        <button onClick={() => setShowCreateModal(true)} className="px-6 py-3 rounded-xl font-bold bg-black text-white shadow-lg shadow-black/10 hover:bg-neutral-800">
-                            Create Your First Event
-                        </button>
+                    <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl">
+                        <p className="text-slate-400 mb-4">No events found</p>
+                        <button onClick={() => setShowCreateModal(true)} className="text-primary hover:underline">Create your first event</button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {events.map(event => (
-                            <div key={event._id} className="bg-white border border-black/5 rounded-2xl p-6 cursor-pointer hover:border-black/20 hover:shadow-lg transition-all" onClick={() => navigate(`/admin/event/${event._id}`)}>
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="flex-1">
-                                        <h3 className="text-lg font-semibold mb-1 text-black">{event.title}</h3>
-                                        <p className="text-sm text-slate-500">/{event.slug}</p>
+                        {events.slice(0, 3).map(event => (
+                            <div
+                                key={event._id}
+                                onClick={() => navigate(`/admin/event/${event._id}`)}
+                                className="bg-bg-secondary border border-white/5 rounded-2xl p-5 hover:border-primary/50 cursor-pointer transition-all group"
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center text-white font-bold">
+                                        {event.title.charAt(0)}
                                     </div>
-                                    {getStatusBadge(event.status)}
+                                    <span className={`px-2 py-1 rounded text-xs font-medium border ${event.status === 'published' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                                        }`}>
+                                        {event.status || 'Draft'}
+                                    </span>
                                 </div>
-                                <div className="flex items-center gap-4 text-sm text-slate-500">
-                                    <div className="flex items-center gap-1">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                        </svg>
-                                        <span>{event.leads?.length || 0} leads</span>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <span>{new Date(event.createdAt).toLocaleDateString()}</span>
-                                    </div>
+                                <h3 className="text-lg font-bold text-white group-hover:text-primary transition-colors">{event.title}</h3>
+                                <p className="text-sm text-slate-500 mb-4">/{event.slug}</p>
+                                <div className="flex items-center gap-4 text-xs text-slate-400">
+                                    <span className="flex items-center gap-1"><FaUsers /> {event.leads?.length || 0} Leads</span>
+                                    <span>{new Date(event.createdAt).toLocaleDateString()}</span>
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
-            </main>
+            </div>
 
-            {/* Create Event Modal */}
+            {/* Create Modal */}
             {showCreateModal && (
-                <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-black/5 rounded-2xl p-8 max-w-md w-full shadow-2xl animate-[slideUp_0.3s_ease-out]">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-2xl font-bold text-black">Create New Event</h3>
-                            <button onClick={() => setShowCreateModal(false)} className="p-2 rounded-lg hover:bg-black/5 text-slate-500 hover:text-black transition-colors">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+                    <div className="bg-bg-secondary border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl animate-[fadeIn_0.3s_ease-out]">
+                        <h3 className="text-2xl font-bold text-white mb-6">Create New Event</h3>
                         <form onSubmit={handleCreate} className="space-y-6">
-                            <div className="relative">
+                            <div>
                                 <label className="block text-xs font-semibold tracking-widest uppercase text-slate-500 mb-2">Event Title</label>
                                 <input
                                     type="text"
-                                    className="w-full px-5 py-3 bg-slate-50 border border-black/10 rounded-xl text-black focus:outline-none focus:bg-white focus:border-black transition-all"
+                                    className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-primary transition-all"
                                     placeholder="e.g., Tech Summit 2026"
                                     value={newEvent.title}
                                     onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
@@ -215,25 +157,22 @@ const Dashboard = () => {
                                     autoFocus
                                 />
                             </div>
-                            <div className="relative">
+                            <div>
                                 <label className="block text-xs font-semibold tracking-widest uppercase text-slate-500 mb-2">URL Slug</label>
                                 <input
                                     type="text"
-                                    className="w-full px-5 py-3 bg-slate-50 border border-black/10 rounded-xl text-black focus:outline-none focus:bg-white focus:border-black transition-all"
+                                    className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-primary transition-all"
                                     placeholder="e.g., tech-summit-2026"
                                     value={newEvent.slug}
                                     onChange={(e) => setNewEvent({ ...newEvent, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
                                     required
                                 />
-                                <p className="text-xs text-slate-500 mt-2">
-                                    Public URL: <span className="text-black">/{newEvent.slug || 'your-slug'}</span>
-                                </p>
                             </div>
-                            <div className="flex gap-3">
-                                <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 px-4 py-3 rounded-xl border border-black/10 text-slate-500 hover:text-black hover:bg-black/5 transition-all">
+                            <div className="flex gap-3 pt-2">
+                                <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 px-4 py-3 rounded-xl border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 transition-all">
                                     Cancel
                                 </button>
-                                <button type="submit" disabled={creating} className="flex-1 px-4 py-3 rounded-xl font-bold bg-black text-white hover:bg-neutral-800 transition-all disabled:opacity-50">
+                                <button type="submit" disabled={creating} className="flex-1 px-4 py-3 rounded-xl font-bold bg-white text-black hover:bg-slate-200 transition-all disabled:opacity-50">
                                     {creating ? 'Creating...' : 'Create Event'}
                                 </button>
                             </div>
