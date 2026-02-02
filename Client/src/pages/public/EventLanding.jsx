@@ -101,14 +101,33 @@ const PublicEventPage = () => {
 
         // 2. Draw Photo
         if (config.coordinates.photo) {
-            const { x, y, radius } = config.coordinates.photo;
+            const { x, y, radius, shape } = config.coordinates.photo; // Added shape
             const photoImg = new Image();
             photoImg.src = photoPreview;
             await new Promise(resolve => photoImg.onload = resolve);
 
             ctx.save();
             ctx.beginPath();
-            ctx.arc(x, y, radius, 0, Math.PI * 2, true);
+
+            if (shape === 'square') {
+                const size = radius * 2;
+                // Draw rounded rectangle (centered at x, y)
+                const r = 40; // Corner radius
+                const lx = x - radius;
+                const ly = y - radius;
+                ctx.moveTo(lx + r, ly);
+                ctx.lineTo(lx + size - r, ly);
+                ctx.quadraticCurveTo(lx + size, ly, lx + size, ly + r);
+                ctx.lineTo(lx + size, ly + size - r);
+                ctx.quadraticCurveTo(lx + size, ly + size, lx + size - r, ly + size);
+                ctx.lineTo(lx + r, ly + size);
+                ctx.quadraticCurveTo(lx, ly + size, lx, ly + size - r);
+                ctx.lineTo(lx, ly + r);
+                ctx.quadraticCurveTo(lx, ly, lx + r, ly);
+            } else {
+                ctx.arc(x, y, radius, 0, Math.PI * 2, true);
+            }
+
             ctx.closePath();
             ctx.clip();
 
@@ -130,20 +149,72 @@ const PublicEventPage = () => {
             ctx.restore();
         }
 
-        // 3. Draw Generic Text Fields
-        const { typography, coordinates } = config;
-        ctx.textAlign = 'center';
+        // 3. Draw Generic & Static Text Fields
+        const { typography, coordinates, posterElements } = config;
 
         Object.keys(coordinates).forEach(key => {
             if (key === 'photo') return;
-            if (!formData[key]) return; // Skip if user hasn't typed anything
+
+            // Text Source: 1. User Input (formData) -> 2. Admin Config (posterElements) -> 3. Empty
+            let text = formData[key] || '';
+            if (!text && posterElements && posterElements[key]) {
+                text = posterElements[key];
+            }
+
+            if (!text) return;
 
             const style = typography[key] || { size: 24, color: '#000000' };
 
-            ctx.font = `${key === 'name' ? '700' : '400'} ${style.size}px "${typography.fontFamily}"`;
+            // Casing
+            if (style.casing === 'uppercase') text = text.toUpperCase();
+            if (style.casing === 'lowercase') text = text.toLowerCase();
+
+            // Font Construction
+            const weight = style.weight === 'bold' ? 'bold' : (style.weight === '800' ? '800' : 'normal');
+            const family = style.fontFamily || typography.fontFamily || 'Arial';
+            ctx.font = `${weight} ${style.size}px "${family}"`;
+
+            // Alignment
+            ctx.textAlign = style.align || 'center';
+            ctx.textBaseline = 'middle';
+
+            // Background Color (Draw Rect behind text)
+            if (style.backgroundColor && style.backgroundColor !== 'transparent') {
+                const metrics = ctx.measureText(text);
+                const textWidth = metrics.width;
+                const textHeight = style.size; // Approximation
+                const padding = style.size * 0.2;
+
+                let tx = coordinates[key].x;
+                const ty = coordinates[key].y - (textHeight / 2); // Top Y of line box
+
+                if (ctx.textAlign === 'center') tx -= (textWidth / 2);
+                if (ctx.textAlign === 'right') tx -= textWidth;
+
+                ctx.fillStyle = style.backgroundColor;
+                ctx.fillRect(tx - padding, ty - padding + (textHeight * 0.1), textWidth + (padding * 2), textHeight + (padding * 1));
+            }
+
             ctx.fillStyle = style.color;
-            ctx.fillText(formData[key], coordinates[key].x, coordinates[key].y);
+            ctx.fillText(text, coordinates[key].x, coordinates[key].y);
         });
+
+        // 3.5 QR Code
+        if (posterElements?.qrEnabled) {
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.href)}`;
+            const qrImg = new Image();
+            qrImg.crossOrigin = "anonymous";
+            qrImg.src = qrUrl;
+            try {
+                await new Promise((r) => { qrImg.onload = r; qrImg.onerror = r; });
+                // Draw QR at bottom right by default or fixed position
+                const qrSize = 250;
+                ctx.drawImage(qrImg, width - qrSize - 50, height - qrSize - 50, qrSize, qrSize);
+            } catch (e) {
+                console.error("QR Load Error", e);
+            }
+        }
+
 
         // 4. Watermark
         if (config.watermarkUrl) {
@@ -264,19 +335,19 @@ const PublicEventPage = () => {
     const fields = Object.keys(event.config.coordinates).filter(k => k !== 'photo');
 
     return (
-        <div className="min-h-screen bg-bg-primary text-black font-sans flex flex-col md:flex-row overflow-hidden absolute inset-0">
+        <div className="min-h-screen bg-bg-primary text-white font-sans flex flex-col md:flex-row overflow-hidden absolute inset-0">
 
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none z-0"></div>
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none z-0"></div>
 
             {/* LEFT PANEL: INPUT & PROCESS */}
             <div className="w-full md:w-1/2 p-6 md:p-12 relative z-10 flex flex-col h-full overflow-y-auto custom-scrollbar">
 
                 {/* Branding */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-extrabold text-black">
+                    <h1 className="text-3xl font-extrabold text-white">
                         {event.title}
                     </h1>
-                    <p className="text-sm text-slate-500 mt-2">Official Badge Generator</p>
+                    <p className="text-sm text-slate-400 mt-2">Official Badge Generator</p>
                 </div>
 
                 <AnimatePresence mode='wait'>
@@ -297,7 +368,7 @@ const PublicEventPage = () => {
                                         <button
                                             key={r.label}
                                             onClick={() => setFormData({ ...formData, role: r.label })}
-                                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all border ${formData.role === r.label ? 'bg-black border-black text-white' : 'bg-transparent border-black/10 text-slate-500 hover:border-black/30'}`}
+                                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all border ${formData.role === r.label ? 'bg-primary border-primary text-white' : 'bg-transparent border-white/10 text-slate-400 hover:border-white/30'}`}
                                         >
                                             {r.label}
                                         </button>
@@ -309,13 +380,13 @@ const PublicEventPage = () => {
                             <div className="space-y-4">
                                 {fields.filter(f => ['name', 'company'].includes(f)).map(key => (
                                     <div key={key}>
-                                        <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">{key}</label>
+                                        <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">{key}</label>
                                         <input
                                             name={key}
                                             value={formData[key] || ''}
                                             onChange={handleInputChange}
                                             placeholder={`Your ${key}`}
-                                            className="w-full bg-slate-100 border border-black/10 rounded-xl px-4 py-3 text-black focus:outline-none focus:border-black transition-colors"
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
                                         />
                                     </div>
                                 ))}
@@ -323,13 +394,13 @@ const PublicEventPage = () => {
 
                             {/* Photo Upload */}
                             <div>
-                                <label className="block text-xs uppercase tracking-wide text-slate-500 mb-2">Profile Photo</label>
+                                <label className="block text-xs uppercase tracking-wide text-slate-400 mb-2">Profile Photo</label>
                                 <div className="flex items-center gap-4">
                                     <label className="flex-1 cursor-pointer group">
                                         <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-                                        <div className="h-24 border-2 border-dashed border-black/20 rounded-xl flex items-center justify-center gap-2 group-hover:border-black/50 group-hover:bg-black/5 transition-all">
-                                            <FaCamera className="text-xl text-slate-400 group-hover:text-black mb-1" />
-                                            <div className="text-xs text-slate-500 group-hover:text-black">
+                                        <div className="h-24 border-2 border-dashed border-white/10 rounded-xl flex items-center justify-center gap-2 group-hover:border-primary/50 group-hover:bg-primary/5 transition-all">
+                                            <FaCamera className="text-xl text-slate-400 group-hover:text-white mb-1" />
+                                            <div className="text-xs text-slate-400 group-hover:text-white">
                                                 {photoPreview ? "Change Photo" : "Upload Selfie"}
                                             </div>
                                         </div>
@@ -342,7 +413,7 @@ const PublicEventPage = () => {
 
                             <button
                                 onClick={handleHighResWrapper}
-                                className="mt-4 w-full py-4 bg-black text-white font-bold rounded-xl hover:bg-neutral-800 transition-colors shadow-lg shadow-black/10"
+                                className="mt-4 w-full py-4 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20"
                             >
                                 Get High-Res Poster &rarr;
                             </button>
@@ -359,11 +430,11 @@ const PublicEventPage = () => {
                             className="bg-bg-tertiary border border-black/10 p-6 rounded-2xl"
                         >
                             <h3 className="text-lg font-bold mb-4">Final Step</h3>
-                            <p className="text-sm text-slate-500 mb-6">Complete your profile to download the high-resolution event badge.</p>
+                            <p className="text-sm text-slate-400 mb-6">Complete your profile to download the high-resolution event badge.</p>
 
                             <div className="space-y-4 mb-6">
                                 <div>
-                                    <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">Mobile Number</label>
+                                    <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">Mobile Number</label>
                                     <input
                                         name="mobile"
                                         value={formData.mobile || ''}
@@ -374,7 +445,7 @@ const PublicEventPage = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">Designation / Job Title</label>
+                                    <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">Designation / Job Title</label>
                                     <input
                                         name="designation"
                                         value={formData.designation || ''}
@@ -413,7 +484,7 @@ const PublicEventPage = () => {
                                 <FaCheckCircle className="text-3xl" />
                             </div>
                             <h2 className="text-3xl font-bold mb-2">You're All Set!</h2>
-                            <p className="text-slate-500 mb-8">Your official badge is ready to share.</p>
+                            <p className="text-slate-400 mb-8">Your official badge is ready to share.</p>
 
                             <button onClick={handleDownload} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 mb-6">
                                 <FaDownload /> Download Image
@@ -431,15 +502,15 @@ const PublicEventPage = () => {
             </div>
 
             {/* RIGHT PANEL: LIVE PREVIEW (Desktop Only) */}
-            <div className="hidden md:flex w-1/2 bg-white relative items-center justify-center p-8 border-l border-black/5">
-                <div className="absolute inset-0 bg-black/5 blur-3xl opacity-20"></div>
-                <div className="relative z-10 w-[400px] h-auto shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-lg overflow-hidden border border-black/5">
+            <div className="hidden md:flex w-1/2 bg-bg-secondary relative items-center justify-center p-8 border-l border-white/5">
+                <div className="absolute inset-0 bg-primary/5 blur-3xl opacity-20"></div>
+                <div className="relative z-10 w-[400px] h-auto shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-lg overflow-hidden border border-white/10">
                     {step === 4 && generatedImage ? (
                         <img src={generatedImage} alt="Final" className="w-full h-auto" />
                     ) : (
                         <>
-                            <canvas ref={canvasRef} className="w-full h-auto bg-slate-100" />
-                            {!photoPreview && <div className="absolute inset-0 flex items-center justify-center text-black/20 pointer-events-none">Live Preview</div>}
+                            <canvas ref={canvasRef} className="w-full h-auto bg-neutral-900" />
+                            {!photoPreview && <div className="absolute inset-0 flex items-center justify-center text-white/20 pointer-events-none">Live Preview</div>}
                         </>
                     )}
                 </div>

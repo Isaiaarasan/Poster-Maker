@@ -44,6 +44,16 @@ const EventSchema = new mongoose.Schema({
             companyLimit: { type: Number, default: 30 }
         },
 
+        // New Features for Poster 5 Ws & Branding
+        posterElements: {
+            type: Object,
+            default: {}
+        },
+        branding: {
+            type: Object,
+            default: {}
+        },
+
         // Roles & Categories configuration
         roles: [{
             label: String, // e.g. Visitor, Exhibitor

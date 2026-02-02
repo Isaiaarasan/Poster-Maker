@@ -16,6 +16,19 @@ const EventEditor = () => {
         validation: { nameLimit: 20, companyLimit: 30 },
         backgroundImageUrl: '',
         watermarkUrl: '',
+        watermarkUrl: '',
+        posterElements: { // New Section for Best Practices
+            date: '',
+            time: '',
+            location: '',
+            cta: '',
+            website: '',
+            qrEnabled: false
+        },
+        branding: {
+            colors: ['#ffffff', '#000000', '#3b82f6'], // Palette
+            logoUrl: ''
+        },
         sponsors: [],
         roles: []
     });
@@ -102,6 +115,9 @@ const EventEditor = () => {
         formData.append('status', event.status);
         formData.append('sponsors', JSON.stringify(config.sponsors || []));
         formData.append('roles', JSON.stringify(config.roles || []));
+        // NEW: Save Branding & Poster Elements
+        formData.append('posterElements', JSON.stringify(config.posterElements || {}));
+        formData.append('branding', JSON.stringify(config.branding || {}));
 
         try {
             const res = await axios.put(`/api/events/${id}/config`, formData, {
@@ -161,11 +177,11 @@ const EventEditor = () => {
             ...prev,
             coordinates: {
                 ...prev.coordinates,
-                [key]: { x: 540, y: 960 } // Default center
+                [key]: { x: 540, y: 1000 } // Default center
             },
             typography: {
                 ...prev.typography,
-                [key]: { size: 30, color: '#000000' }
+                [key]: { size: 30, color: '#000000', weight: 'normal', align: 'center' }
             }
         }));
         setNewFieldName('');
@@ -259,13 +275,154 @@ const EventEditor = () => {
                                         <input type="file" onChange={(e) => handleFileChange(e, 'bg')} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-black/5 file:text-black hover:file:bg-black/10 transition-colors" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-700">Global Watermark</label>
-                                        <input type="file" onChange={(e) => handleFileChange(e, 'wm')} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-black/5 file:text-black hover:file:bg-black/10 transition-colors" />
+                                        <label className="text-sm font-medium text-slate-700">Master Background (1080x1920)</label>
+                                        <input type="file" onChange={(e) => handleFileChange(e, 'bg')} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-black/5 file:text-black hover:file:bg-black/10 transition-colors" />
+                                    </div>
+                                    {/* Watermark Removed as requested */}
+                                </div>
+                            </div>
+
+                            {/* PHOTO LAYER CONFIGURATION */}
+                            <div className="bg-white border border-black/5 rounded-2xl p-6 shadow-sm">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Photo Layer</h3>
+                                <div className="space-y-4">
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <label className="text-sm font-medium text-slate-700">Size (Radius/Width)</label>
+                                            <input
+                                                type="range"
+                                                min="50" max="400"
+                                                value={config.coordinates.photo?.radius || 100}
+                                                onChange={(e) => setConfig({
+                                                    ...config,
+                                                    coordinates: {
+                                                        ...config.coordinates,
+                                                        photo: { ...config.coordinates.photo, radius: parseInt(e.target.value) }
+                                                    }
+                                                })}
+                                                className="w-full mt-2 accent-black"
+                                            />
+                                            <div className="text-xs text-slate-400 text-right">{config.coordinates.photo?.radius || 100}px</div>
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="text-sm font-medium text-slate-700">Shape</label>
+                                            <div className="flex bg-slate-100 rounded-lg p-1 mt-2">
+                                                <button
+                                                    onClick={() => setConfig({ ...config, coordinates: { ...config.coordinates, photo: { ...config.coordinates.photo, shape: 'circle' } } })}
+                                                    className={`flex-1 py-1 text-xs font-medium rounded-md transition-all ${(!config.coordinates.photo?.shape || config.coordinates.photo.shape === 'circle') ? 'bg-white shadow-sm text-black' : 'text-slate-500'}`}
+                                                >
+                                                    Circle
+                                                </button>
+                                                <button
+                                                    onClick={() => setConfig({ ...config, coordinates: { ...config.coordinates, photo: { ...config.coordinates.photo, shape: 'square' } } })}
+                                                    className={`flex-1 py-1 text-xs font-medium rounded-md transition-all ${config.coordinates.photo?.shape === 'square' ? 'bg-white shadow-sm text-black' : 'text-slate-500'}`}
+                                                >
+                                                    Square
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Dynamic Fields Section */}
+                            {/* POSTER BEST PRACTICES (5 Ws) */}
+                            <div className="bg-white border border-black/5 rounded-2xl p-6 shadow-sm">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Poster Content (The 5 Ws)</h3>
+                                <p className="text-xs text-slate-400 mb-4">Define standard details for greater effectiveness.</p>
+
+                                <div className="space-y-3">
+                                    {['date', 'time', 'location', 'cta', 'website'].map(field => (
+                                        <div key={field} className="flex gap-2 items-center">
+                                            <div className="flex-1">
+                                                <label className="text-xs font-bold text-slate-700 uppercase">{field}</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder={`Enter ${field}...`}
+                                                    value={config.posterElements?.[field] || ''}
+                                                    onChange={(e) => setConfig({
+                                                        ...config,
+                                                        posterElements: { ...(config.posterElements || {}), [field]: e.target.value }
+                                                    })}
+                                                    className="w-full mt-1 px-3 py-2 bg-slate-50 border border-black/10 rounded-lg text-sm text-black focus:outline-none focus:border-black"
+                                                />
+                                            </div>
+                                            {/* Toggle to show on canvas as editable text layer */}
+                                            <button
+                                                onClick={() => {
+                                                    if (!config.coordinates[field]) {
+                                                        // Enhanced Defaults for Professional Layout
+                                                        const defaults = {
+                                                            date: { y: 1200, size: 40, weight: 'bold', casing: 'none' },
+                                                            time: { y: 1260, size: 30, weight: 'normal', casing: 'none' },
+                                                            location: { y: 1320, size: 30, weight: 'normal', casing: 'none' },
+                                                            cta: { y: 1500, size: 45, weight: '800', casing: 'uppercase' }, // Call to Action stands out
+                                                            website: { y: 1600, size: 24, weight: 'normal', casing: 'none' }
+                                                        }[field] || { y: 1000, size: 30, weight: 'normal', casing: 'none' };
+
+                                                        setConfig(prev => ({
+                                                            ...prev,
+                                                            coordinates: { ...prev.coordinates, [field]: { x: 540, y: defaults.y } },
+                                                            typography: {
+                                                                ...prev.typography,
+                                                                [field]: {
+                                                                    size: defaults.size,
+                                                                    color: '#000000',
+                                                                    weight: defaults.weight,
+                                                                    align: 'center',
+                                                                    casing: defaults.casing
+                                                                }
+                                                            }
+                                                        }));
+                                                    }
+                                                }}
+                                                className={`mt-6 p-2 rounded-lg border transition-all ${config.coordinates[field] ? 'bg-black text-white border-black' : 'text-slate-400 border-black/5 hover:border-black'}`}
+                                                title="Add to Canvas"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* BRANDING & PALETTE */}
+                            <div className="bg-white border border-black/5 rounded-2xl p-6 shadow-sm">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Branding & Colors</h3>
+
+                                <div className="mb-4">
+                                    <label className="text-sm font-medium text-slate-700 block mb-2">Color Palette (3-5 Colors)</label>
+                                    <div className="flex gap-2">
+                                        {(config.branding?.colors || ['#ffffff', '#000000', '#3b82f6']).map((c, i) => (
+                                            <div key={i} className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shadow-sm cursor-pointer hover:scale-110 transition-transform">
+                                                <input
+                                                    type="color"
+                                                    value={c}
+                                                    onChange={(e) => {
+                                                        const newColors = [...(config.branding?.colors || [])];
+                                                        newColors[i] = e.target.value;
+                                                        setConfig({ ...config, branding: { ...config.branding, colors: newColors } });
+                                                    }}
+                                                    className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] p-0 border-0 cursor-pointer"
+                                                />
+                                            </div>
+                                        ))}
+                                        <button
+                                            onClick={() => setConfig({ ...config, branding: { ...config.branding, colors: [...(config.branding?.colors || []), '#888888'] } })}
+                                            className="w-8 h-8 rounded-full border border-dashed border-black/20 flex items-center justify-center text-slate-400 hover:text-black hover:border-black"
+                                        >+</button>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-black/5">
+                                    <span className="text-sm font-medium text-slate-700">QR Code</span>
+                                    <button
+                                        onClick={() => setConfig({ ...config, posterElements: { ...config.posterElements, qrEnabled: !config.posterElements?.qrEnabled } })}
+                                        className={`w-10 h-6 rounded-full flex items-center transition-colors p-1 ${config.posterElements?.qrEnabled ? 'bg-black justify-end' : 'bg-slate-200 justify-start'}`}
+                                    >
+                                        <div className="w-4 h-4 rounded-full bg-white shadow-sm"></div>
+                                    </button>
+                                </div>
+                            </div>
                             <div className="bg-white border border-black/5 rounded-2xl p-6 shadow-sm">
                                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Field Configuration</h3>
                                 <div className="flex gap-2 mb-4">
@@ -293,50 +450,122 @@ const EventEditor = () => {
                                         </select>
                                     </div>
 
-                                    {availableFields.map(key => (
-                                        <div key={key} className="space-y-2 border-t border-black/5 pt-4">
-                                            <div className="flex justify-between items-center">
-                                                <label className="text-sm font-medium text-slate-700 capitalize">{key.replace('_', ' ')}</label>
-                                                {!['name', 'company', 'designation'].includes(key) && (
-                                                    <button onClick={() => removeField(key)} className="text-xs text-slate-400 hover:text-red-500">Remove</button>
-                                                )}
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <div className="flex-1">
-                                                    <label className="text-[10px] text-slate-500 uppercase tracking-wide">Size (px)</label>
-                                                    <input
-                                                        type="number"
-                                                        value={config.typography[key]?.size || 24}
+                                    {availableFields.map(key => {
+                                        const style = config.typography[key] || { size: 24, color: '#000000' };
+                                        return (
+                                            <div key={key} className="space-y-3 border-t border-black/5 pt-4">
+                                                <div className="flex justify-between items-center">
+                                                    <label className="text-sm font-bold text-slate-800 capitalize bg-slate-100 px-2 py-1 rounded">{key.replace('_', ' ')}</label>
+                                                    {!['name', 'company', 'designation'].includes(key) && (
+                                                        <button onClick={() => removeField(key)} className="text-xs text-red-400 hover:text-red-600">Remove</button>
+                                                    )}
+                                                </div>
+
+                                                {/* Row 1: Font & Weight */}
+                                                <div className="flex gap-2">
+                                                    <select
+                                                        value={style.fontFamily || config.typography.fontFamily} // Fallback to global
                                                         onChange={(e) => setConfig({
                                                             ...config,
-                                                            typography: {
-                                                                ...config.typography,
-                                                                [key]: { ...(config.typography[key] || { color: '#000000' }), size: parseInt(e.target.value) }
-                                                            }
+                                                            typography: { ...config.typography, [key]: { ...style, fontFamily: e.target.value } }
                                                         })}
-                                                        className="w-full px-3 py-2 bg-slate-50 border border-black/10 rounded-lg text-black text-sm focus:outline-none focus:border-black"
-                                                    />
+                                                        className="flex-[2] px-2 py-1 bg-slate-50 border border-black/10 rounded text-xs text-black focus:outline-none"
+                                                    >
+                                                        <option value="Arial">Arial</option>
+                                                        <option value="Inter">Inter</option>
+                                                        <option value="Roboto">Roboto</option>
+                                                        <option value="Outfit">Outfit</option>
+                                                        <option value="Courier New">Courier</option>
+                                                        <option value="Times New Roman">Times</option>
+                                                    </select>
+                                                    <select
+                                                        value={style.weight || 'normal'}
+                                                        onChange={(e) => setConfig({
+                                                            ...config,
+                                                            typography: { ...config.typography, [key]: { ...style, weight: e.target.value } }
+                                                        })}
+                                                        className="flex-1 px-2 py-1 bg-slate-50 border border-black/10 rounded text-xs text-black focus:outline-none"
+                                                    >
+                                                        <option value="normal">Reg</option>
+                                                        <option value="bold">Bold</option>
+                                                        <option value="800">Hv</option>
+                                                    </select>
                                                 </div>
-                                                <div>
-                                                    <label className="text-[10px] text-slate-500 uppercase tracking-wide">Color</label>
-                                                    <div className="relative w-10 h-10 overflow-hidden rounded-lg border border-black/10">
+
+                                                {/* Row 2: Size, Align, Casing */}
+                                                <div className="flex gap-2 items-center">
+                                                    <input
+                                                        type="number"
+                                                        value={style.size}
+                                                        onChange={(e) => setConfig({
+                                                            ...config,
+                                                            typography: { ...config.typography, [key]: { ...style, size: parseInt(e.target.value) } }
+                                                        })}
+                                                        className="w-16 px-2 py-1 bg-slate-50 border border-black/10 rounded text-xs text-black"
+                                                        placeholder="Size"
+                                                    />
+                                                    <div className="flex bg-slate-100 rounded p-0.5">
+                                                        {['left', 'center', 'right'].map(a => (
+                                                            <button
+                                                                key={a}
+                                                                onClick={() => setConfig({ ...config, typography: { ...config.typography, [key]: { ...style, align: a } } })}
+                                                                className={`p-1 rounded ${style.align === a ? 'bg-white shadow text-black' : 'text-slate-400'}`}
+                                                            >
+                                                                {a === 'left' && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h10M4 18h7" /></svg>}
+                                                                {a === 'center' && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M7 12h10M9 18h6" /></svg>}
+                                                                {a === 'right' && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M10 12h10M13 18h7" /></svg>}
+                                                                {(!style.align && a === 'center') && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M7 12h10M9 18h6" /></svg>}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setConfig({ ...config, typography: { ...config.typography, [key]: { ...style, casing: style.casing === 'uppercase' ? 'none' : 'uppercase' } } })}
+                                                        className={`px-2 py-1 rounded text-xs uppercase font-bold border ${style.casing === 'uppercase' ? 'bg-black text-white border-black' : 'border-black/10 text-slate-500'}`}
+                                                    >AA</button>
+                                                </div>
+
+                                                {/* Row 3: Colors */}
+                                                <div className="flex gap-2 text-xs text-slate-500">
+                                                    <div className="flex-1 flex gap-2 items-center border border-black/5 rounded p-1">
+                                                        <span>Text</span>
                                                         <input
                                                             type="color"
-                                                            value={config.typography[key]?.color || '#000000'}
+                                                            value={style.color}
                                                             onChange={(e) => setConfig({
                                                                 ...config,
-                                                                typography: {
-                                                                    ...config.typography,
-                                                                    [key]: { ...(config.typography[key] || { size: 24 }), color: e.target.value }
-                                                                }
+                                                                typography: { ...config.typography, [key]: { ...style, color: e.target.value } }
                                                             })}
-                                                            className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] cursor-pointer p-0 border-0"
+                                                            className="w-5 h-5 p-0 border-0 rounded cursor-pointer"
                                                         />
+                                                    </div>
+                                                    <div className="flex-1 flex gap-2 items-center border border-black/5 rounded p-1">
+                                                        <span>Bg</span>
+                                                        <div className="relative w-5 h-5">
+                                                            <input
+                                                                type="color"
+                                                                value={style.backgroundColor || '#ffffff'}
+                                                                onChange={(e) => setConfig({
+                                                                    ...config,
+                                                                    typography: { ...config.typography, [key]: { ...style, backgroundColor: e.target.value } }
+                                                                })}
+                                                                className="w-full h-full p-0 border-0 rounded cursor-pointer"
+                                                            />
+                                                            {(!style.backgroundColor || style.backgroundColor === 'transparent') && (
+                                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-[8px] text-red-500 bg-white/50">/</div>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            onClick={() => setConfig({ ...config, typography: { ...config.typography, [key]: { ...style, backgroundColor: style.backgroundColor === 'transparent' ? '#ffffff' : 'transparent' } } })}
+                                                            className="ml-auto text-xs opacity-50 hover:opacity-100"
+                                                            title="Toggle Transparent"
+                                                        >
+                                                            {style.backgroundColor === 'transparent' ? 'Off' : 'On'}
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                             </div>
 
@@ -398,7 +627,9 @@ const EventEditor = () => {
                                                 top: (config.coordinates.photo.y / 1920) * 100 + '%',
                                                 left: (config.coordinates.photo.x / 1080) * 100 + '%',
                                                 width: (config.coordinates.photo.radius * 2 / 1080 * 100) + '%',
-                                                height: (config.coordinates.photo.radius * 2 / 1080 * 100 * (9 / 16)) + '%'
+                                                width: (config.coordinates.photo.radius * 2 / 1080 * 100) + '%',
+                                                height: (config.coordinates.photo.radius * 2 / 1080 * 100 * (9 / 16)) + '%',
+                                                borderRadius: (config.coordinates.photo.shape === 'square') ? '8px' : '50%'
                                             }}
                                             className="absolute -translate-x-1/2 -translate-y-1/2 cursor-move border-2 border-dashed border-white bg-white/20 rounded-full flex items-center justify-center text-xs text-white backdrop-blur-sm"
                                             title="Drag Photo Area"
@@ -415,6 +646,10 @@ const EventEditor = () => {
 
                                         // Approximate visual scaling for preview
                                         const relativeSize = style.size / 10;
+                                        // Alignment handling
+                                        let translate = '-50%';
+                                        if (style.align === 'left') translate = '0%';
+                                        if (style.align === 'right') translate = '-100%';
 
                                         return (
                                             <div
@@ -425,16 +660,30 @@ const EventEditor = () => {
                                                     top: (pos.y / 1920) * 100 + '%',
                                                     left: (pos.x / 1080) * 100 + '%',
                                                     color: style.color,
-                                                    fontSize: `${relativeSize}px`, // This is approximate, actual pixels differ on screen
-                                                    fontFamily: config.typography.fontFamily
+                                                    fontSize: `${relativeSize}px`,
+                                                    fontFamily: style.fontFamily || config.typography.fontFamily,
+                                                    fontWeight: style.weight || 'normal',
+                                                    backgroundColor: style.backgroundColor || 'transparent',
+                                                    textTransform: style.casing || 'none',
+                                                    padding: style.backgroundColor && style.backgroundColor !== 'transparent' ? '2px 4px' : '0',
+                                                    transform: `translate(${translate}, -50%)`, // Respect alignment logic
+                                                    textAlign: style.align || 'center'
                                                 }}
-                                                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-move border border-dashed border-white/50 bg-white/10 px-2 rounded whitespace-nowrap hover:bg-white/30 transition-colors backdrop-blur-sm font-bold shadow-sm"
+                                                className={`absolute cursor-move border border-dashed border-white/30 hover:bg-white/10 transition-colors whitespace-nowrap`}
                                                 title={`Drag ${key}`}
                                             >
                                                 {key.toUpperCase()}
                                             </div>
                                         );
                                     })}
+                                    {/* QR Code Placeholder */}
+                                    {config.posterElements?.qrEnabled && (
+                                        <div className="absolute bottom-10 right-10 w-[15%] aspect-square bg-white p-2 rounded shadow-lg flex items-center justify-center">
+                                            <div className="w-full h-full bg-black/10 flex items-center justify-center text-[10px] text-center text-slate-500 font-mono">
+                                                QR CODE
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="text-slate-500 flex flex-col items-center">

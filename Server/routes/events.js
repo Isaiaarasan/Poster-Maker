@@ -110,7 +110,9 @@ router.put('/:id/config', upload.fields([{ name: 'background', maxCount: 1 }, { 
             validation,
             status,
             sponsors,
-            roles
+            roles,
+            posterElements, // NEW
+            branding       // NEW
         } = req.body;
 
         if (coordinates) {
@@ -125,6 +127,16 @@ router.put('/:id/config', upload.fields([{ name: 'background', maxCount: 1 }, { 
         if (status) event.status = status;
         if (sponsors) event.config.sponsors = JSON.parse(sponsors);
         if (roles) event.config.roles = JSON.parse(roles);
+
+        // NEW: Persist 5 Ws & Branding
+        if (posterElements) {
+            event.config.posterElements = JSON.parse(posterElements);
+            event.markModified('config.posterElements');
+        }
+        if (branding) {
+            event.config.branding = JSON.parse(branding);
+            event.markModified('config.branding');
+        }
 
         await event.save();
         res.json(event);
