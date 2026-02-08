@@ -25,25 +25,25 @@ const EventEditor = () => {
             designation: { x: 540, y: 1130 },
             company: { x: 540, y: 1200 },
             email: { x: 540, y: 1270 },
-            date: { x: 540, y: 200 },
-            website: { x: 540, y: 1750 }
+            website: { x: 540, y: 1750 },
+            address: { x: 540, y: 1650 }
         },
         typography: {
             fontFamily: 'Outfit',
-            name: { size: 70, color: '#FFFFFF', weight: 'bold' },
-            designation: { size: 40, color: '#CCCCCC', weight: 'normal' },
-            company: { size: 35, color: '#AAAAAA', weight: 'normal' },
-            email: { size: 30, color: '#888888', weight: 'normal' },
-            date: { size: 40, color: '#FFFFFF', weight: 'bold', casing: 'uppercase' },
-            website: { size: 30, color: '#FFFFFF', weight: 'normal' }
+            name: { size: 70, color: '#000000', weight: 'bold', align: 'center' },
+            designation: { size: 40, color: '#000000', weight: 'normal', align: 'center' },
+            company: { size: 35, color: '#000000', weight: 'normal', align: 'center' },
+            email: { size: 30, color: '#000000', weight: 'normal', align: 'center' },
+            website: { size: 30, color: '#000000', weight: 'normal', align: 'center' },
+            address: { size: 30, color: '#000000', weight: 'normal', align: 'center' }
         },
         validation: { nameLimit: 30, companyLimit: 50 },
         backgroundImageUrl: '',
         watermarkUrl: '',
         posterElements: {
             // Default Static Content
-            date: 'OCTOBER 24-26, 2024',
             website: 'WWW.TECHCONF.COM',
+            address: 'ADDRESS',
             time: '', location: '', cta: '', qrEnabled: true
         },
         branding: { colors: ['#ffffff', '#000000', '#8b5cf6'] },
@@ -57,8 +57,43 @@ const EventEditor = () => {
     // UI States
     const imageRef = useRef(null);
     const [dragging, setDragging] = useState(null);
+    const [selectedField, setSelectedField] = useState(null);
     const [newFieldName, setNewFieldName] = useState('');
     const [newRoleName, setNewRoleName] = useState('');
+
+    // Keyboard Navigation for Moving Elements
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (!selectedField || !config.coordinates[selectedField]) return;
+
+            // Ignore if typing in an input
+            if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+            const step = e.shiftKey ? 10 : 1;
+            let { x, y } = config.coordinates[selectedField];
+
+            switch (e.key) {
+                case 'ArrowUp': y -= step; break;
+                case 'ArrowDown': y += step; break;
+                case 'ArrowLeft': x -= step; break;
+                case 'ArrowRight': x += step; break;
+                case 'Delete':
+                case 'Backspace':
+                    if (!['name', 'company', 'designation', 'photo', 'date', 'email', 'website', 'address'].includes(selectedField)) {
+                        removeField(selectedField);
+                        setSelectedField(null);
+                    }
+                    break;
+                default: return;
+            }
+
+            e.preventDefault();
+            updateCoordinate(selectedField, x, y);
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selectedField, config]);
 
     useEffect(() => {
         fetchEvent();
@@ -135,6 +170,14 @@ const EventEditor = () => {
     const handleDragStart = (e, key) => {
         e.dataTransfer.setData("key", key);
         setDragging(key);
+        setSelectedField(key);
+    };
+
+    const handleCanvasClick = (e) => {
+        // If clicking background (not an item), deselect
+        if (e.target === imageRef.current || e.target.tagName === 'IMG') {
+            setSelectedField(null);
+        }
     };
 
     const handleDrop = (e) => {
@@ -162,19 +205,21 @@ const EventEditor = () => {
         setConfig(prev => ({
             ...prev,
             coordinates: { ...prev.coordinates, [key]: { x: 540, y: 960 } },
-            typography: { ...prev.typography, [key]: { size: 40, color: '#ffffff', weight: 'bold', align: 'center' } }
+            typography: { ...prev.typography, [key]: { size: 40, color: '#000000', weight: 'bold', align: 'center' } }
         }));
         setNewFieldName('');
+        setSelectedField(key);
     };
 
     const removeField = (key) => {
-        if (['name', 'company', 'designation', 'photo', 'date', 'website'].includes(key)) {
+        if (['name', 'company', 'designation', 'photo', 'date', 'website', 'email', 'address'].includes(key)) {
             alert("Standard fields cannot be removed to ensure template quality.");
             return;
         }
         const newCoords = { ...config.coordinates }; delete newCoords[key];
         const newTypo = { ...config.typography }; delete newTypo[key];
         setConfig(prev => ({ ...prev, coordinates: newCoords, typography: newTypo }));
+        if (selectedField === key) setSelectedField(null);
     };
 
     // Render Logic
@@ -282,13 +327,13 @@ const EventEditor = () => {
                                                                 onChange={(e) => setConfig({ ...config, typography: { ...config.typography, [key]: { ...style, color: e.target.value } } })}
                                                                 className="w-5 h-5 rounded cursor-pointer bg-transparent border-none"
                                                             />
-                                                            {!['name', 'company', 'designation', 'photo', 'date', 'email', 'website'].includes(key) && (
+                                                            {!['name', 'company', 'designation', 'photo', 'date', 'email', 'website', 'address'].includes(key) && (
                                                                 <button onClick={() => removeField(key)} className="text-slate-500 hover:text-red-500"><FaTrash size={12} /></button>
                                                             )}
                                                         </div>
 
                                                         {/* If it's a static element (Date, Website), allow editing the text content */}
-                                                        {['date', 'website', 'time', 'location', 'cta'].includes(key) && (
+                                                        {['date', 'website', 'time', 'location', 'cta', 'address'].includes(key) && (
                                                             <div className="mb-3">
                                                                 <input
                                                                     type="text"
@@ -429,6 +474,7 @@ const EventEditor = () => {
                                 className="relative h-full aspect-[9/16] bg-white shadow-2xl overflow-hidden group"
                                 onDrop={handleDrop}
                                 onDragOver={handleDragOver}
+                                onClick={handleCanvasClick}
                             >
                                 {bgPreview ? (
                                     <>
@@ -446,7 +492,8 @@ const EventEditor = () => {
                                                     height: (config.coordinates.photo.radius * 2 / 1080 * 100 * (9 / 16)) + '%',
                                                     borderRadius: config.coordinates.photo.shape === 'square' ? '10%' : '50%'
                                                 }}
-                                                className="absolute -translate-x-1/2 -translate-y-1/2 border-2 border-dashed border-white/50 bg-black/20 backdrop-blur-sm cursor-move flex items-center justify-center group-hover:border-primary transition-colors"
+                                                className={`absolute -translate-x-1/2 -translate-y-1/2 border-2 text-white/50 backdrop-blur-sm cursor-move flex items-center justify-center transition-all ${selectedField === 'photo' ? 'border-primary bg-primary/10' : 'border-dashed border-white/50 bg-black/20'}`}
+                                                onClick={(e) => { e.stopPropagation(); setSelectedField('photo'); }}
                                             >
                                                 <span className="text-[10px] text-white font-bold tracking-widest opacity-50">PHOTO</span>
                                             </div>
@@ -473,7 +520,8 @@ const EventEditor = () => {
                                                         fontWeight: style.weight,
                                                         textAlign: style.align
                                                     }}
-                                                    className="absolute whitespace-nowrap cursor-move border border-dashed border-transparent hover:border-primary/50 px-2 py-1 transition-all"
+                                                    className={`absolute whitespace-nowrap cursor-move border transition-all hover:border-primary/50 px-2 py-1 ${selectedField === key ? 'border-primary bg-primary/10' : 'border-dashed border-transparent'}`}
+                                                    onClick={(e) => { e.stopPropagation(); setSelectedField(key); }}
                                                 >
                                                     {(() => {
                                                         // Determine display text: Static Content OR Dynamic Placeholder
@@ -481,6 +529,7 @@ const EventEditor = () => {
                                                         if (['name'].includes(key)) displayText = 'JOHN DOE';
                                                         if (['company'].includes(key)) displayText = 'ACME CORP';
                                                         if (['email'].includes(key)) displayText = 'user@example.com';
+                                                        if (['address'].includes(key)) displayText = 'ADDRESS';
                                                         if (config.posterElements?.[key]) displayText = config.posterElements[key];
 
                                                         return displayText;
