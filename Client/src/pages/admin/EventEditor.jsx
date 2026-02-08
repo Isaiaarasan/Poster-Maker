@@ -61,7 +61,7 @@ const EventEditor = () => {
             company: { x: 540, y: 1050 },
             email: { x: 540, y: 1150 },
             website: { x: 540, y: 1250 },
-            address: { x: 540, y: 1450 }
+            address: { x: 540, y: 1350 }
         },
         typography: {
             fontFamily: 'Outfit',
@@ -252,7 +252,7 @@ const EventEditor = () => {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         const scaleX = 1080 / rect.width;
-        const scaleY = 1920 / rect.height;
+        const scaleY = 1600 / rect.height;
 
         if (dragging) {
             updateCoordinate(dragging, Math.round(x * scaleX), Math.round(y * scaleY));
@@ -656,6 +656,7 @@ const EventEditor = () => {
                                 {/* Dynamic Wrapper: Matches VISUAL size of canvas so flex-center works correctly */}
                                 <div style={{ width: 1080 * zoom, height: 1600 * zoom, transition: 'width 0.2s, height 0.2s' }} className="relative flex-shrink-0">
                                     <div
+                                        ref={imageRef}
                                         className="absolute top-0 left-0 bg-white shadow-2xl border border-white/5 origin-top-left transition-transform duration-200 ease-out"
                                         style={{
                                             width: '1080px',

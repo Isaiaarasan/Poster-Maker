@@ -80,7 +80,7 @@ const PublicEventPage = () => {
         const fabricInstance = fabric.fabric || fabric;
         const newCanvas = new fabricInstance.StaticCanvas(canvasRef.current, {
             width: 1080,
-            height: 1920,
+            height: 1600,
             backgroundColor: '#fff'
         });
 
@@ -103,7 +103,7 @@ const PublicEventPage = () => {
 
             // IMMEDIATE BASE LAYER: White Background
             const baseRect = new fabricInstance.Rect({
-                width: 1080, height: 1920,
+                width: 1080, height: 1600,
                 fill: '#ffffff',
                 selectable: false,
                 left: 0, top: 0
@@ -129,15 +129,15 @@ const PublicEventPage = () => {
                         i.onerror = () => resolve(null);
                     });
                     if (img) {
-                        // SCALING LOGIC: Cover & Center
-                        const scale = Math.max(1080 / img.width, 1920 / img.height);
+                        // SCALING LOGIC: Cover & Center (1600 height)
+                        const scale = Math.max(1080 / img.width, 1600 / img.height);
                         img.scale(scale);
 
                         img.set({
                             originX: 'center',
                             originY: 'center',
                             left: 540,
-                            top: 960,
+                            top: 800,
                             selectable: false
                         });
 
@@ -520,7 +520,7 @@ const PublicEventPage = () => {
 
             {/* RIGHT PANEL: PREVIEW */}
             <div className="hidden md:flex flex-1 relative items-center justify-center bg-bg-secondary p-12">
-                <div className="relative z-10 h-[85vh] aspect-[9/16] max-w-[500px] shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-neutral-900 group">
+                <div className="relative z-10 h-[85vh] aspect-[27/40] max-w-[600px] shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-neutral-900 group">
                     {step === 4 && generatedImage ? (
                         <img src={generatedImage} alt="Final" className="w-full h-full object-contain" />
                     ) : (
