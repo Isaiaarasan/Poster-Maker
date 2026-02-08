@@ -20,10 +20,12 @@ const EventSchema = new mongoose.Schema({
         coordinates: {
             type: Object,
             default: {
-                photo: { x: 0, y: 0, radius: 100 },
-                name: { x: 0, y: 0 },
-                designation: { x: 0, y: 0 },
-                company: { x: 0, y: 0 }
+                photo: { x: 540, y: 400, radius: 150 }, // Standardized
+                name: { x: 540, y: 1000 },
+                designation: { x: 540, y: 1100 },
+                company: { x: 540, y: 1200 },
+                email: { x: 540, y: 1300 },
+                website: { x: 540, y: 1400 }
             }
         },
 
@@ -32,9 +34,11 @@ const EventSchema = new mongoose.Schema({
             type: Object,
             default: {
                 fontFamily: 'Arial',
-                name: { size: 40, color: '#000000' },
-                designation: { size: 24, color: '#555555' },
-                company: { size: 24, color: '#555555' }
+                name: { size: 60, color: '#000000', align: 'center', weight: 'bold' },
+                designation: { size: 40, color: '#555555', align: 'center', weight: 'normal' },
+                company: { size: 40, color: '#555555', align: 'center', weight: 'normal' },
+                email: { size: 30, color: '#777777', align: 'center', weight: 'normal' },
+                website: { size: 30, color: '#777777', align: 'center', weight: 'normal' }
             }
         },
 
@@ -67,6 +71,8 @@ const EventSchema = new mongoose.Schema({
         name: String,
         prefix: String, // Mr, Mrs, etc
         mobile: String,
+        email: String,
+        website: String,
         designation: String,
         company: String,
         role: String, // Selected role

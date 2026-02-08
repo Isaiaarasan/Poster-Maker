@@ -101,7 +101,16 @@ const PublicEventPage = () => {
 
             const { config } = event;
 
-            // 1. Determine Background
+            // IMMEDIATE BASE LAYER: White Background
+            const baseRect = new fabricInstance.Rect({
+                width: 1080, height: 1920,
+                fill: '#ffffff',
+                selectable: false,
+                left: 0, top: 0
+            });
+            fabricCanvas.add(baseRect);
+
+            // Determine Background URL
             let bgUrl = config.backgroundImageUrl;
             if (formData.role) {
                 const roleConfig = config.roles?.find(r => r.label === formData.role);
@@ -110,131 +119,130 @@ const PublicEventPage = () => {
                 }
             }
 
-            // Load Background
-            try {
-                // We use utility to load image to ensure cors
-                const img = await new Promise((resolve) => {
-                    const imgEl = new Image();
-                    imgEl.crossOrigin = 'anonymous';
-                    imgEl.src = bgUrl;
-                    imgEl.onload = () => resolve(new fabricInstance.Image(imgEl));
-                    imgEl.onerror = () => resolve(null);
-                });
+            // LAYER 1: Background Image
+            if (bgUrl) {
+                try {
+                    const cleanUrl = bgUrl + (bgUrl.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+                    const img = await new Promise((resolve) => {
+                        const i = new Image(); i.crossOrigin = 'anonymous'; i.src = cleanUrl;
+                        i.onload = () => resolve(new fabricInstance.Image(i));
+                        i.onerror = () => resolve(null);
+                    });
+                    if (img) {
+                        // SCALING LOGIC: Cover & Center
+                        const scale = Math.max(1080 / img.width, 1920 / img.height);
+                        img.scale(scale);
 
-                if (img) {
-                    // Make sure it covers the canvas
-                    img.scaleToWidth(1080);
-                    if (img.getScaledHeight() < 1920) img.scaleToHeight(1920);
-                    fabricCanvas.setBackgroundImage(img, fabricCanvas.renderAll.bind(fabricCanvas));
-                }
-            } catch (e) {
-                console.error("BG Load Error", e);
+                        img.set({
+                            originX: 'center',
+                            originY: 'center',
+                            left: 540,
+                            top: 960,
+                            selectable: false
+                        });
+
+                        fabricCanvas.add(img);
+                        fabricCanvas.sendToBack(img);
+                    }
+                } catch (e) { console.error("BG Error", e); }
             }
 
-            // 2. Load Photo (Legacy Coordinate System Support)
+            // LAYER 2: Photo
             if (config.coordinates.photo && photoPreview) {
                 try {
                     const { x, y, radius, shape } = config.coordinates.photo;
                     const photoImg = await new Promise((resolve) => {
-                        const imgEl = new Image();
-                        imgEl.src = photoPreview;
-                        imgEl.onload = () => resolve(new fabricInstance.Image(imgEl));
-                        imgEl.onerror = () => resolve(null);
+                        const i = new Image(); i.src = photoPreview;
+                        i.onload = () => resolve(new fabricInstance.Image(i));
+                        i.onerror = () => resolve(null);
                     });
 
                     if (photoImg) {
-                        // Create Clip Path
                         let clipPath;
                         const size = radius * 2;
 
-                        // Center of the object is handled differently in Fabric
-                        // We set originX/Y to center for easier positioning
-
+                        // Clip Path must be strictly centered at 0,0 relative to the object center in modern Fabric
                         if (shape === 'square') {
                             clipPath = new fabricInstance.Rect({
-                                width: size,
-                                height: size,
-                                rx: 20, ry: 20, // Rounded corners default
-                                originX: 'center',
-                                originY: 'center',
+                                width: size, height: size,
+                                rx: 20, ry: 20,
+                                originX: 'center', originY: 'center',
+                                left: 0, top: 0 // Relative to object center
                             });
                         } else {
                             clipPath = new fabricInstance.Circle({
                                 radius: radius,
-                                originX: 'center',
-                                originY: 'center',
+                                originX: 'center', originY: 'center',
+                                left: 0, top: 0
                             });
                         }
 
-                        // Scale photo to cover the area
-                        const photoRatio = photoImg.width / photoImg.height;
-                        if (photoRatio > 1) {
-                            photoImg.scaleToHeight(size);
-                        } else {
-                            photoImg.scaleToWidth(size);
-                        }
+                        // Smart Scaling to Fill the Area
+                        // We want the image to COVER the circle/square.
+                        const scale = Math.max(size / photoImg.width, size / photoImg.height);
+                        photoImg.scale(scale);
 
                         photoImg.set({
                             left: x,
                             top: y,
                             originX: 'center',
                             originY: 'center',
-                            clipPath: clipPath
+                            clipPath: clipPath,
+                            selectable: false
                         });
-
                         fabricCanvas.add(photoImg);
                     }
                 } catch (e) { console.error("Photo Error", e); }
             }
 
-            // 3. Load Text Fields (Legacy System)
+            // LAYER 3: Text Fields
             const fields = Object.keys(config.coordinates).filter(k => k !== 'photo');
             fields.forEach(key => {
                 let text = formData[key] || '';
-                // Fallback to static config
+                // Fallback to static config or placeholder
                 if (!text && config.posterElements && config.posterElements[key]) {
                     text = config.posterElements[key];
                 }
+
+                // If it's empty, and we are in preview mode, maybe show placeholder? 
+                // No, user wants to see what they type.
+
                 if (!text) return;
 
                 const style = config.typography[key] || { size: 24, color: '#000000' };
-                // transform casing
-                // omitted strict casing logic for brevity but can add back
-
                 const textObj = new fabricInstance.Text(text, {
                     left: config.coordinates[key].x,
                     top: config.coordinates[key].y,
                     fontSize: style.size,
                     fill: style.color,
-                    fontFamily: style.fontFamily || config.typography.fontFamily || 'Arial',
+                    fontFamily: style.fontFamily || 'Arial',
                     fontWeight: style.weight === 'bold' ? 'bold' : 'normal',
                     textAlign: style.align || 'center',
                     originX: style.align === 'left' ? 'left' : (style.align === 'right' ? 'right' : 'center'),
-                    originY: 'middle'
+                    originY: 'middle',
+                    selectable: false
                 });
-
                 fabricCanvas.add(textObj);
             });
 
-            // 4. QR Code
+            // LAYER 4: QR Code
             if (config.posterElements?.qrEnabled) {
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.href)}`;
-                const qrImg = await new Promise((resolve) => {
-                    const imgEl = new Image();
-                    imgEl.crossOrigin = 'anonymous';
-                    imgEl.src = qrUrl;
-                    imgEl.onload = () => resolve(new fabricInstance.Image(imgEl));
-                    imgEl.onerror = () => resolve(null);
-                });
-                if (qrImg) {
-                    qrImg.set({
-                        left: 1080 - 250 - 50,
-                        top: 1920 - 250 - 50,
-                        scaleX: 250 / qrImg.width,
-                        scaleY: 250 / qrImg.height
+                try {
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.href)}`;
+                    const qrImg = await new Promise((resolve) => {
+                        const i = new Image(); i.crossOrigin = 'anonymous'; i.src = qrUrl;
+                        i.onload = () => resolve(new fabricInstance.Image(i));
+                        i.onerror = () => resolve(null);
                     });
-                    fabricCanvas.add(qrImg);
-                }
+                    if (qrImg) {
+                        qrImg.set({
+                            left: 1080 - 250 - 50, top: 1920 - 250 - 50,
+                            scaleX: 250 / qrImg.width, scaleY: 250 / qrImg.height,
+                            selectable: false
+                        });
+                        fabricCanvas.add(qrImg);
+                    }
+                } catch (e) { }
             }
 
             // 5. Watermark
@@ -395,7 +403,7 @@ const PublicEventPage = () => {
 
                             {/* Inputs */}
                             <div className="space-y-4">
-                                {fields.filter(f => ['name', 'company'].includes(f)).map(key => (
+                                {fields.filter(f => ['name', 'company', 'email', 'website', 'address'].includes(f)).map(key => (
                                     <div key={key}>
                                         <label className="block text-xs uppercase tracking-widest text-slate-500 mb-2">{key}</label>
                                         <input
@@ -512,22 +520,29 @@ const PublicEventPage = () => {
 
             {/* RIGHT PANEL: PREVIEW */}
             <div className="hidden md:flex flex-1 relative items-center justify-center bg-bg-secondary p-12">
-                <div className="relative z-10 w-full max-w-[500px] aspect-[9/16] shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-neutral-900 group">
+                <div className="relative z-10 h-[85vh] aspect-[9/16] max-w-[500px] shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-neutral-900 group">
                     {step === 4 && generatedImage ? (
                         <img src={generatedImage} alt="Final" className="w-full h-full object-contain" />
                     ) : (
-                        <>
+                        <div className="relative w-full h-full fabric-preview-wrapper">
+                            {/* Force Fabric to scale down visually using CSS */}
+                            <style>{`
+                                .fabric-preview-wrapper .canvas-container {
+                                    width: 100% !important;
+                                    height: 100% !important;
+                                }
+                                .fabric-preview-wrapper canvas {
+                                    width: 100% !important;
+                                    height: 100% !important;
+                                }
+                            `}</style>
                             <canvas ref={canvasRef} className="w-full h-full object-contain bg-neutral-900" />
                             {!photoPreview && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm text-center p-8">
-                                    <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 text-white/50">
-                                        <FaMagic className="text-2xl" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-white mb-2">Live Preview</h3>
-                                    <p className="text-slate-400 text-sm">Upload your photo to see your personalized badge here instantly.</p>
+                                <div className="absolute top-4 right-4 bg-black/50 backdrop-blur text-white/70 text-xs px-3 py-1.5 rounded-full border border-white/10 pointer-events-none flex items-center gap-2">
+                                    <FaCamera /> Upload Photo to see preview
                                 </div>
                             )}
-                        </>
+                        </div>
                     )}
                 </div>
             </div>
