@@ -235,7 +235,18 @@ const EventEditor = () => {
                     </Link>
                     <div>
                         <h1 className="font-bold text-lg leading-tight">{event?.title}</h1>
-                        <div className="text-xs text-slate-400 font-mono">/{event?.slug}</div>
+                        <div className="flex items-center gap-3 text-xs text-slate-400 font-mono mt-1">
+                            <span>/{event?.slug}</span>
+                            <button
+                                onClick={() => setEvent({ ...event, status: event.status === 'published' ? 'draft' : 'published' })}
+                                className={`px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wider transition-all ${event?.status === 'published'
+                                        ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
+                                        : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20'
+                                    }`}
+                            >
+                                {event?.status === 'published' ? '● Published' : '○ Draft'}
+                            </button>
+                        </div>
                     </div>
                 </div>
 

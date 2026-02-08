@@ -9,18 +9,24 @@ const CanvasEditor = ({ onSave, initialData }) => {
     const [templateName, setTemplateName] = useState('');
     const [bgImageFile, setBgImageFile] = useState(null);
 
+    // History State
+    const [history, setHistory] = useState([]);
+    const [historyStep, setHistoryStep] = useState(-1);
+    const isHistoryProcessing = useRef(false);
+
     // Initialize Canvas
     useEffect(() => {
         if (!canvasRef.current) return;
 
         // Check if fabric is available properly
-        const fabricInstance = fabric.fabric || fabric; // Handle import differences
+        const fabricInstance = fabric.fabric || fabric;
 
         const newCanvas = new fabricInstance.Canvas(canvasRef.current, {
-            width: 400, // Preview size, we can scale
-            height: 600,
+            width: 400, // Preview size
+            height: 640,
             backgroundColor: '#fff',
-            preserveObjectStacking: true
+            preserveObjectStacking: true,
+            selection: true
         });
 
         setCanvas(newCanvas);
@@ -29,10 +35,90 @@ const CanvasEditor = ({ onSave, initialData }) => {
         newCanvas.on('selection:updated', (e) => setSelectedObject(e.selected[0]));
         newCanvas.on('selection:cleared', () => setSelectedObject(null));
 
+        // History Listener
+        newCanvas.on('object:modified', saveHistory);
+        newCanvas.on('object:added', (e) => {
+            if (!isHistoryProcessing.current) saveHistory();
+        });
+        newCanvas.on('object:removed', (e) => {
+            if (!isHistoryProcessing.current) saveHistory();
+        });
+
+        // Initial History Save
+        // We need to wait slightly for initialization if loading initialData
+        // For now, push empty state
+
         return () => {
             newCanvas.dispose();
         };
     }, []);
+
+    // Save History Snapshot
+    const saveHistory = () => {
+        if (!canvas || isHistoryProcessing.current) return;
+
+        const json = JSON.stringify(canvas.toJSON());
+
+        // If we are in the middle of history, discard future states
+        const newHistory = history.slice(0, historyStep + 1);
+        newHistory.push(json);
+
+        setHistory(newHistory);
+        setHistoryStep(newHistory.length - 1);
+    };
+
+    // Undo
+    const undo = () => {
+        if (historyStep <= 0 || !canvas) return;
+        isHistoryProcessing.current = true;
+
+        const previousStep = historyStep - 1;
+        const json = history[previousStep];
+
+        canvas.loadFromJSON(json, () => {
+            canvas.renderAll();
+            setHistoryStep(previousStep);
+            isHistoryProcessing.current = false;
+        });
+    };
+
+    // Redo
+    const redo = () => {
+        if (historyStep >= history.length - 1 || !canvas) return;
+        isHistoryProcessing.current = true;
+
+        const nextStep = historyStep + 1;
+        const json = history[nextStep];
+
+        canvas.loadFromJSON(json, () => {
+            canvas.renderAll();
+            setHistoryStep(nextStep);
+            isHistoryProcessing.current = false;
+        });
+    };
+
+    // Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault();
+                undo();
+            }
+            if (e.ctrlKey && e.key === 'y') {
+                e.preventDefault();
+                redo();
+            }
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (canvas && canvas.getActiveObject() && !canvas.getActiveObject().isEditing) {
+                    deleteSelected();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [canvas, history, historyStep]);
+
 
     // Add Placeholder Text
     const addPlaceholder = () => {
@@ -56,7 +142,9 @@ const CanvasEditor = ({ onSave, initialData }) => {
         canvas.add(text);
         canvas.setActiveObject(text);
         canvas.renderAll();
+        // Trigger generic history save via object:added event
     };
+
 
     // Handle Background Image Upload
     const handleImageUpload = (e) => {
@@ -87,6 +175,8 @@ const CanvasEditor = ({ onSave, initialData }) => {
                 });
 
                 canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+                // Manually trigger history save since setBackgroundImage might not fire object:added
+                saveHistory();
             });
         };
         reader.readAsDataURL(file);
@@ -131,6 +221,7 @@ const CanvasEditor = ({ onSave, initialData }) => {
         if (canvas && canvas.getActiveObject()) {
             canvas.remove(canvas.getActiveObject());
             canvas.renderAll();
+            // object:removed will trigger history
         }
     };
 
@@ -148,6 +239,11 @@ const CanvasEditor = ({ onSave, initialData }) => {
                         placeholder="e.g. Summer Party"
                         style={{ width: '100%' }}
                     />
+                </div>
+
+                <div style={{ marginBottom: '1rem', display: 'flex', gap: '5px' }}>
+                    <button onClick={undo} disabled={historyStep <= 0} className="btn-secondary" style={{ flex: 1, opacity: historyStep <= 0 ? 0.5 : 1 }}>↩ Undo</button>
+                    <button onClick={redo} disabled={historyStep >= history.length - 1} className="btn-secondary" style={{ flex: 1, opacity: historyStep >= history.length - 1 ? 0.5 : 1 }}>↪ Redo</button>
                 </div>
 
                 <div style={{ marginBottom: '1rem' }}>
@@ -176,6 +272,7 @@ const CanvasEditor = ({ onSave, initialData }) => {
                                 onChange={(e) => {
                                     selectedObject.set('text', e.target.value);
                                     canvas.requestRenderAll();
+                                    saveHistory();
                                 }}
                                 style={{ width: '100%' }}
                             />
@@ -188,6 +285,7 @@ const CanvasEditor = ({ onSave, initialData }) => {
                                 onChange={(e) => {
                                     selectedObject.set('fill', e.target.value);
                                     canvas.requestRenderAll();
+                                    saveHistory();
                                 }}
                                 style={{ width: '100%', height: '40px' }}
                             />
@@ -200,9 +298,30 @@ const CanvasEditor = ({ onSave, initialData }) => {
                                 onChange={(e) => {
                                     selectedObject.set('fontSize', parseInt(e.target.value));
                                     canvas.requestRenderAll();
+                                    saveHistory();
                                 }}
                                 style={{ width: '100%' }}
                             />
+                        </div>
+                        <div style={{ marginTop: '0.5rem' }}>
+                            <label>Font Family</label>
+                            <select
+                                value={selectedObject.fontFamily}
+                                onChange={(e) => {
+                                    selectedObject.set('fontFamily', e.target.value);
+                                    canvas.requestRenderAll();
+                                    saveHistory();
+                                }}
+                                style={{ width: '100%', padding: '0.5rem', backgroundColor: '#334155', color: 'white', border: '1px solid #475569' }}
+                            >
+                                <option value="Arial">Arial</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Courier New">Courier New</option>
+                                <option value="Verdana">Verdana</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Trebuchet MS">Trebuchet MS</option>
+                                <option value="Impact">Impact</option>
+                            </select>
                         </div>
                     </div>
                 )}

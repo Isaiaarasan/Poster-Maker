@@ -24,6 +24,26 @@ const Events = () => {
         }
     };
 
+    const toggleStatus = async (e, event) => {
+        e.stopPropagation();
+        const newStatus = event.status === 'published' ? 'draft' : 'published';
+        try {
+            // Optimistic update
+            const updatedEvents = events.map(ev =>
+                ev._id === event._id ? { ...ev, status: newStatus } : ev
+            );
+            setEvents(updatedEvents);
+
+            await axios.put(`/api/events/${event._id}/config`, {
+                status: newStatus
+            });
+        } catch (err) {
+            console.error("Failed to update status", err);
+            // Revert on failure
+            fetchEvents();
+        }
+    };
+
     const filteredEvents = events.filter(e =>
         e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         e.slug.toLowerCase().includes(searchTerm.toLowerCase())
@@ -48,22 +68,40 @@ const Events = () => {
                 {filteredEvents.map(event => (
                     <div
                         key={event._id}
-                        className="group bg-bg-secondary border border-white/5 rounded-2xl p-6 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5 relative overflow-hidden"
+                        onClick={() => navigate(`/admin/event/${event._id}`)}
+                        className="group bg-bg-secondary border border-white/5 rounded-2xl p-6 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5 relative overflow-hidden cursor-pointer"
                     >
-                        <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                            <button onClick={(e) => { e.stopPropagation(); navigate(`/admin/event/${event._id}`) }} className="p-2 bg-white/10 rounded-lg text-white hover:bg-primary"><FaEdit /></button>
-                            <button onClick={(e) => { e.stopPropagation(); window.open(`/${event.slug}`, '_blank') }} className="p-2 bg-white/10 rounded-lg text-white hover:bg-primary"><FaEye /></button>
+                        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); navigate(`/admin/event/${event._id}`) }}
+                                className="p-2 bg-white/10 rounded-lg text-white hover:bg-primary backdrop-blur-sm"
+                                title="Edit"
+                            >
+                                <FaEdit />
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); window.open(`/${event.slug}`, '_blank') }}
+                                className="p-2 bg-white/10 rounded-lg text-white hover:bg-primary backdrop-blur-sm"
+                                title="View Public Page"
+                            >
+                                <FaEye />
+                            </button>
                         </div>
 
                         <div className="mb-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium border ${event.status === 'published' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                                }`}>
-                                {event.status || 'Draft'}
-                            </span>
+                            <button
+                                onClick={(e) => toggleStatus(e, event)}
+                                className={`px-3 py-1 rounded-full text-xs font-bold border transition-all z-20 relative ${event.status === 'published'
+                                        ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
+                                        : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20'
+                                    }`}
+                            >
+                                {event.status === 'published' ? '● PUBLISHED' : '○ DRAFT'}
+                            </button>
                         </div>
 
-                        <h3 className="text-xl font-bold text-white mb-1">{event.title}</h3>
-                        <p className="text-sm text-slate-500 mb-4">/{event.slug}</p>
+                        <h3 className="text-xl font-bold text-white mb-1 group-hover:text-primary transition-colors">{event.title}</h3>
+                        <p className="text-sm text-slate-500 mb-4 font-mono">/{event.slug}</p>
 
                         <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/5">
                             <div className="text-center">
