@@ -2,26 +2,44 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #8b5cf6;
-  /* Violet-500 */
-  --color-primary-light: #a78bfa;
-  --color-primary-dark: #7c3aed;
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
 
-  --color-secondary: #3b82f6;
-  /* Blue-500 */
-  --color-accent: #ec4899;
-  /* Pink-500 */
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
 
-  --color-bg-primary: #050505;
-  /* Deep rich black */
-  --color-bg-secondary: #0f0f11;
-  /* Slightly lighter/Zinc-950 */
-  --color-bg-tertiary: #18181b;
-  /* Zinc-900 */
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+}
 
-  --color-text-main: #ffffff;
-  --color-text-muted: #94a3b8;
-  /* Slate-400 */
+:root {
+  /* Default Dark Theme */
+  --primary: #8b5cf6;
+  --primary-light: #a78bfa;
+  --primary-dark: #7c3aed;
+
+  --bg-primary: #050505;
+  --bg-secondary: #0f0f11;
+  --bg-tertiary: #18181b;
+
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;
+}
+
+:root.light {
+  /* Light Theme Overrides */
+  --bg-primary: #f8fafc;
+  /* Slate-50 */
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  /* Slate-100 */
+
+  --text-main: #0f172a;
+  /* Slate-900 */
+  --text-muted: #64748b;
+  /* Slate-500 */
 }
 
 body {

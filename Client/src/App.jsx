@@ -18,6 +18,26 @@ const ProtectedRoute = () => {
 };
 
 function App() {
+  useEffect(() => {
+    // Apply Theme from LocalStorage
+    const theme = localStorage.getItem('pm_themeMode') || 'dark';
+    const color = localStorage.getItem('pm_primaryColor') || '#8b5cf6';
+
+    if (theme === 'light') {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+
+    document.documentElement.style.setProperty('--primary', color);
+
+    // Calculate and set variations (simple version)
+    // In a real app, you might use a library to darken/lighten
+    document.documentElement.style.setProperty('--primary-light', color);
+    document.documentElement.style.setProperty('--primary-dark', color);
+
+  }, []);
+
   return (
     <Router>
       <div className="app-container">

@@ -52,7 +52,8 @@ const EventEditor = () => {
         },
         branding: { colors: ['#ffffff', '#000000', '#8b5cf6'] },
         sponsors: [],
-        roles: []
+        roles: [],
+        formFields: {}
     });
 
     const [newFieldName, setNewFieldName] = useState('');
@@ -188,6 +189,7 @@ const EventEditor = () => {
         formData.append('roles', JSON.stringify(config.roles || []));
         formData.append('posterElements', JSON.stringify(config.posterElements || {}));
         formData.append('branding', JSON.stringify(config.branding || {}));
+        formData.append('formFields', JSON.stringify(config.formFields || {}));
 
         try {
             const res = await axios.put(`/api/events/${id}/config`, formData, {
@@ -260,6 +262,7 @@ const EventEditor = () => {
                 company: { x: 540, y: 1200 },
                 email: { x: 540, y: 1300 },
                 website: { x: 540, y: 1400 },
+                mobile: { x: 540, y: 1500 },
                 address: { x: 540, y: 1750 }
             },
             typography: {
@@ -268,7 +271,17 @@ const EventEditor = () => {
                 designation: { ...prev.typography.designation, align: 'center', size: 40, weight: 'normal' },
                 company: { ...prev.typography.company, align: 'center', size: 35, weight: 'normal' },
                 email: { ...prev.typography.email, align: 'center', size: 30, weight: 'normal' },
-                website: { ...prev.typography.website, align: 'center', size: 30, weight: 'normal' }
+                website: { ...prev.typography.website, align: 'center', size: 30, weight: 'normal' },
+                mobile: { ...prev.typography.mobile, align: 'center', size: 30, weight: 'normal' }
+            },
+            formFields: {
+                ...prev.formFields,
+                name: { label: 'Full Name', required: true, placeholder: 'e.g. John Doe' },
+                email: { label: 'Email Address', required: true, placeholder: 'john@example.com' },
+                company: { label: 'Company Name', required: true, placeholder: 'e.g. Acme Corp' },
+                designation: { label: 'Job Title', required: true, placeholder: 'e.g. CEO' },
+                mobile: { label: 'Mobile Number', required: true, placeholder: '+91 98765 43210' },
+                website: { label: 'Website', required: false, placeholder: 'www.yoursite.com' }
             }
         }));
     };
@@ -443,14 +456,63 @@ const EventEditor = () => {
                                                                     {/* Expanded Controls for Selected Item */}
                                                                     {isSelected && (
                                                                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pt-2 border-t border-white/5">
+
+                                                                            {/* FORM CONFIGURATION */}
+                                                                            <div className="bg-black/20 p-2 rounded mb-2">
+                                                                                <p className="text-[10px] uppercase font-bold text-slate-500 mb-2">Form Settings</p>
+                                                                                <div className="space-y-2">
+                                                                                    <div>
+                                                                                        <label className="text-[10px] text-slate-400">Label</label>
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={config.formFields?.[key]?.label || key.replace('_', ' ')}
+                                                                                            onChange={(e) => setConfig({
+                                                                                                ...config,
+                                                                                                formFields: { ...config.formFields, [key]: { ...(config.formFields?.[key] || {}), label: e.target.value } }
+                                                                                            })}
+                                                                                            className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-xs text-white focus:border-primary outline-none"
+                                                                                        />
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <label className="text-[10px] text-slate-400">Placeholder</label>
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={config.formFields?.[key]?.placeholder || ''}
+                                                                                            onChange={(e) => setConfig({
+                                                                                                ...config,
+                                                                                                formFields: { ...config.formFields, [key]: { ...(config.formFields?.[key] || {}), placeholder: e.target.value } }
+                                                                                            })}
+                                                                                            placeholder={`Enter ${key}...`}
+                                                                                            className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-xs text-white focus:border-primary outline-none"
+                                                                                        />
+                                                                                    </div>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <input
+                                                                                            type="checkbox"
+                                                                                            id={`req-${key}`}
+                                                                                            checked={config.formFields?.[key]?.required || false}
+                                                                                            onChange={(e) => setConfig({
+                                                                                                ...config,
+                                                                                                formFields: { ...config.formFields, [key]: { ...(config.formFields?.[key] || {}), required: e.target.checked } }
+                                                                                            })}
+                                                                                            className="accent-primary"
+                                                                                        />
+                                                                                        <label htmlFor={`req-${key}`} className="text-xs text-slate-300">Required Field</label>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+
                                                                             {['date', 'website', 'time', 'location', 'cta', 'address'].includes(key) && (
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={config.posterElements?.[key] || ''}
-                                                                                    onChange={(e) => setConfig({ ...config, posterElements: { ...config.posterElements, [key]: e.target.value } })}
-                                                                                    placeholder="Content..."
-                                                                                    className="w-full bg-black/30 border border-white/10 rounded px-2 py-1.5 text-xs text-white mb-2 focus:border-primary outline-none"
-                                                                                />
+                                                                                <div>
+                                                                                    <label className="text-[10px] text-slate-500 uppercase">Static Content</label>
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        value={config.posterElements?.[key] || ''}
+                                                                                        onChange={(e) => setConfig({ ...config, posterElements: { ...config.posterElements, [key]: e.target.value } })}
+                                                                                        placeholder="Content..."
+                                                                                        className="w-full bg-black/30 border border-white/10 rounded px-2 py-1.5 text-xs text-white mb-2 focus:border-primary outline-none"
+                                                                                    />
+                                                                                </div>
                                                                             )}
 
                                                                             <div className="grid grid-cols-2 gap-2">

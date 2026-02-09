@@ -137,6 +137,10 @@ router.put('/:id/config', upload.fields([{ name: 'background', maxCount: 1 }, { 
             event.config.branding = JSON.parse(branding);
             event.markModified('config.branding');
         }
+        if (req.body.formFields) {
+            event.config.formFields = JSON.parse(req.body.formFields);
+            event.markModified('config.formFields');
+        }
 
         await event.save();
         res.json(event);

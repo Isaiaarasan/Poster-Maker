@@ -286,10 +286,21 @@ const PublicEventPage = () => {
     };
 
     const submitLeadAndGenerate = async () => {
-        if (!formData.mobile || !formData.designation) {
-            alert("Please complete safely critical information to proceed.");
+        // Validation
+        const missingFields = [];
+        const requiredFields = fields.filter(key => event.config.formFields?.[key]?.required);
+
+        requiredFields.forEach(key => {
+            if (!formData[key]) missingFields.push(event.config.formFields?.[key]?.label || key);
+        });
+
+        if (event.config.coordinates.photo && !photoPreview) missingFields.push("Profile Photo");
+
+        if (missingFields.length > 0) {
+            alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
             return;
         }
+
         setIsGenerating(true);
         setStep(3);
 
@@ -358,9 +369,11 @@ const PublicEventPage = () => {
     if (!event) return <div className="h-screen bg-black text-white flex items-center justify-center">Event not found</div>;
 
     const fields = Object.keys(event.config.coordinates).filter(k => k !== 'photo');
+    const primaryColor = event.config.branding?.colors?.[2] || '#8b5cf6';
+    const secondaryColor = event.config.branding?.colors?.[1] || '#6d28d9';
 
     return (
-        <div className="min-h-screen bg-bg-primary text-white font-sans flex flex-col md:flex-row overflow-hidden relative">
+        <div className="min-h-screen bg-bg-primary text-white font-sans flex flex-col md:flex-row overflow-hidden relative" style={{ backgroundColor: event.config.branding?.colors?.[0] || '#09090b', color: event.config.branding?.colors?.[1] === '#ffffff' ? '#000' : '#fff' }}>
 
             {/* Background Ambience */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -395,7 +408,12 @@ const PublicEventPage = () => {
                                             <button
                                                 key={r.label}
                                                 onClick={() => setFormData({ ...formData, role: r.label })}
-                                                className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all border ${formData.role === r.label ? 'bg-primary border-primary text-white shadow-lg shadow-primary/25' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
+                                                style={{
+                                                    backgroundColor: formData.role === r.label ? (primaryColor || '#8b5cf6') : 'rgba(255,255,255,0.05)',
+                                                    borderColor: formData.role === r.label ? (primaryColor || '#8b5cf6') : 'rgba(255,255,255,0.1)',
+                                                    color: formData.role === r.label ? '#fff' : '#94a3b8'
+                                                }}
+                                                className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all border shadow-lg`}
                                             >
                                                 {r.label}
                                             </button>
@@ -404,94 +422,83 @@ const PublicEventPage = () => {
                                 </div>
                             )}
 
-                            {/* Inputs */}
+                            {/* Dynamic Inputs */}
                             <div className="space-y-4">
-                                {fields.filter(f => !['photo', 'designation'].includes(f)).map(key => (
-                                    <div key={key}>
-                                        <label className="block text-xs uppercase tracking-widest text-slate-500 mb-2">{key.replace(/_/g, ' ')}</label>
-                                        <input
-                                            name={key}
-                                            value={formData[key] || ''}
-                                            onChange={handleInputChange}
-                                            placeholder={`Enter your ${key.replace(/_/g, ' ')}`}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-primary focus:bg-white/10 transition-all font-medium"
-                                        />
-                                    </div>
-                                ))}
+                                {fields.map(key => {
+                                    const fieldConfig = event.config.formFields?.[key] || {};
+                                    const label = fieldConfig.label || key.replace(/_/g, ' ');
+                                    const placeholder = fieldConfig.placeholder || `Enter your ${label}`;
+                                    const isRequired = fieldConfig.required;
+
+                                    // Infer type
+                                    let type = "text";
+                                    if (key.includes('email')) type = "email";
+                                    if (key.includes('mobile') || key.includes('phone')) type = "tel";
+
+                                    return (
+                                        <div key={key}>
+                                            <label className="block text-xs uppercase tracking-widest text-slate-500 mb-2">
+                                                {label} {isRequired && <span className="text-red-500">*</span>}
+                                            </label>
+                                            <input
+                                                name={key}
+                                                type={type}
+                                                required={isRequired}
+                                                value={formData[key] || ''}
+                                                onChange={handleInputChange}
+                                                placeholder={placeholder}
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:bg-white/10 transition-all font-medium placeholder:text-slate-600"
+                                                style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+                                                onFocus={(e) => e.target.style.borderColor = primaryColor || '#8b5cf6'}
+                                                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                                            />
+                                        </div>
+                                    );
+                                })}
                             </div>
 
                             {/* Photo Upload */}
-                            <div>
-                                <label className="block text-xs uppercase tracking-widest text-slate-500 mb-2">Profile Photo</label>
-                                <div className="flex items-center gap-4">
-                                    <label className="flex-1 cursor-pointer group relative overflow-hidden rounded-xl">
-                                        <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-                                        <div className="h-28 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center gap-2 group-hover:border-primary/50 group-hover:bg-primary/5 transition-all bg-white/5">
-                                            <FaCamera className="text-2xl text-slate-400 group-hover:text-white" />
-                                            <div className="text-xs text-slate-400 group-hover:text-white font-medium">
-                                                {photoPreview ? "Change Photo" : "Upload Selfie"}
+                            {event.config.coordinates.photo && (
+                                <div>
+                                    <label className="block text-xs uppercase tracking-widest text-slate-500 mb-2">Profile Photo <span className="text-red-500">*</span></label>
+                                    <div className="flex items-center gap-4">
+                                        <label className="flex-1 cursor-pointer group relative overflow-hidden rounded-xl">
+                                            <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                                            <div
+                                                className="h-28 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center gap-2 transition-all bg-white/5"
+                                                style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+                                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.backgroundColor = primaryColor + '10'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; }}
+                                            >
+                                                <FaCamera className="text-2xl text-slate-400 group-hover:text-white" />
+                                                <div className="text-xs text-slate-400 group-hover:text-white font-medium">
+                                                    {photoPreview ? "Change Photo" : "Upload Selfie"}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </label>
-                                    {photoPreview && (
-                                        <div className="w-28 h-28 rounded-xl overflow-hidden border-2 border-primary/50 shadow-xl">
-                                            <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
-                                        </div>
-                                    )}
+                                        </label>
+                                        {photoPreview && (
+                                            <div className="w-28 h-28 rounded-xl overflow-hidden border-2 shadow-xl" style={{ borderColor: primaryColor || '#8b5cf6' }}>
+                                                <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             <button
-                                onClick={handleHighResWrapper}
-                                className="w-full py-4 bg-gradient-to-r from-primary to-primary-dark text-white font-bold rounded-xl hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 text-lg"
+                                onClick={submitLeadAndGenerate}
+                                style={{ background: `linear-gradient(to right, ${primaryColor || '#8b5cf6'}, ${secondaryColor || '#6d28d9'})` }}
+                                className="w-full py-4 text-white font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 text-lg shadow-primary/25"
                             >
-                                <FaMagic /> Generate Poster
+                                <FaMagic /> Generate Badge
                             </button>
                         </motion.div>
                     )}
 
-                    {step === 2 && (
-                        <motion.div
-                            key="lead"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="bg-white/5 border border-white/10 p-8 rounded-2xl backdrop-blur-xl"
-                        >
-                            <h3 className="text-xl font-bold mb-2">Final Step</h3>
-                            <p className="text-sm text-slate-400 mb-6">Enter your details to receive the high-quality version.</p>
-                            <div className="space-y-4 mb-6">
-                                <div>
-                                    <label className="block text-xs uppercase tracking-widest text-slate-500 mb-2">Mobile Number</label>
-                                    <input
-                                        name="mobile"
-                                        value={formData.mobile || ''}
-                                        onChange={handleInputChange}
-                                        type="tel"
-                                        placeholder="+91..."
-                                        className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-primary"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs uppercase tracking-widest text-slate-500 mb-2">Job Title</label>
-                                    <input
-                                        name="designation"
-                                        value={formData.designation || ''}
-                                        onChange={handleInputChange}
-                                        placeholder="e.g. CEO"
-                                        className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-primary"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex gap-3">
-                                <button onClick={() => setStep(1)} className="px-6 py-3 rounded-xl border border-white/10 text-slate-300 hover:text-white hover:bg-white/5">Back</button>
-                                <button onClick={submitLeadAndGenerate} className="flex-1 py-3 bg-white text-black font-bold rounded-xl hover:bg-slate-200 transaction-all shadow-lg shadow-white/10">Get My Badge</button>
-                            </div>
-                        </motion.div>
-                    )}
 
                     {step === 3 && (
                         <div className="flex flex-col items-center justify-center h-64">
-                            <FaSpinner className="w-12 h-12 text-primary animate-spin mb-4" />
+                            <FaSpinner className="w-12 h-12 animate-spin mb-4" style={{ color: primaryColor }} />
                             <h3 className="text-lg font-bold">Creating Magic...</h3>
                         </div>
                     )}
@@ -503,11 +510,14 @@ const PublicEventPage = () => {
                             animate={{ scale: 1, opacity: 1 }}
                             className="text-center bg-white/5 border border-white/10 p-8 rounded-2xl"
                         >
-                            <FaCheckCircle className="text-5xl text-green-500 mx-auto mb-4" />
+                            <FaCheckCircle className="text-5xl mx-auto mb-4" style={{ color: '#22c55e' }} />
                             <h2 className="text-2xl font-bold mb-2">It's Ready!</h2>
                             <p className="text-slate-400 mb-6">Download your badge and share it with the world.</p>
 
-                            <button onClick={handleDownload} className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2 mb-4 shadow-lg shadow-white/10">
+                            <button
+                                onClick={handleDownload}
+                                className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2 mb-4 shadow-lg shadow-white/10"
+                            >
                                 <FaDownload /> Download Image
                             </button>
 
@@ -516,6 +526,8 @@ const PublicEventPage = () => {
                                 <button onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`, '_blank')} className="p-4 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-[#1DA1F2] hover:border-[#1DA1F2] transition-colors"><FaTwitter className="text-xl" /></button>
                                 <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`, '_blank')} className="p-4 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-[#25D366] hover:border-[#25D366] transition-colors"><FaWhatsapp className="text-xl" /></button>
                             </div>
+
+                            <button onClick={() => setStep(1)} className="mt-6 text-xs text-slate-500 hover:text-white underline">Create Another</button>
                         </motion.div>
                     )}
                 </AnimatePresence>
