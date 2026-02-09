@@ -1,12 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import {
-    FaArrowLeft, FaSave, FaUpload, FaFont, FaPalette, FaQrcode,
-    FaLayerGroup, FaImage, FaTrash, FaPlus, FaCheck, FaDesktop,
-    FaMobileAlt, FaCog, FaUsers, FaCamera,
-    FaUndo, FaRedo, FaSearchPlus, FaSearchMinus, FaCompress, FaMagnet,
-    FaAlignLeft, FaAlignCenter, FaAlignRight, FaChevronDown, FaChevronUp, FaEye
+    FaSave, FaArrowLeft, FaMobileAlt, FaImage, FaFont, FaPalette, FaLayerGroup,
+    FaPlus, FaTrash, FaUndo, FaRedo, FaSearchPlus, FaSearchMinus, FaCompress,
+    FaMagnet, FaAlignLeft, FaAlignCenter, FaAlignRight, FaCog, FaCamera, FaUpload, FaUsers, FaQrcode, FaCheckCircle, FaChevronDown, FaChevronUp
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,139 +12,126 @@ const EventEditor = () => {
     const { id } = useParams();
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('config');
-    const [msg, setMsg] = useState('');
     const [saving, setSaving] = useState(false);
+    const [msg, setMsg] = useState('');
+    const [activeTab, setActiveTab] = useState('config'); // config | leads
 
-    // Editor Features State
-    const [zoom, setZoom] = useState(0.40); // Adjusted for laptop screens
-    const [showGrid, setShowGrid] = useState(true);
+    // Editor State
+    const [selectedField, setSelectedField] = useState(null);
+    const [bgFile, setBgFile] = useState(null);
+    const [bgPreview, setBgPreview] = useState(null);
+    const [zoom, setZoom] = useState(0.4); // Initial default zoom
+    const [showGrid, setShowGrid] = useState(false);
     const [history, setHistory] = useState([]);
     const [historyIndex, setHistoryIndex] = useState(-1);
-    const [openSections, setOpenSections] = useState({ assets: false, layers: true, photo: false, branding: false });
+    const imageRef = useRef(null);
+
+    // Accordion State
+    const [openSections, setOpenSections] = useState({
+        assets: true,
+        layers: true,
+        photo: false,
+        branding: false
+    });
 
     const toggleSection = (section) => {
         setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
     };
 
-    // Auto-Fit Zoom to Screen
-    useEffect(() => {
-        const handleResize = () => {
-            // Calculate optimal zoom for 1080x1600 (27:40 ratio)
-            // Subtract header (64px) + Toolbar (80px) + Padding (40px) = ~184px vertical space needed
-            const availableHeight = window.innerHeight - 200;
-            const availableWidth = window.innerWidth - 450; // Sidebar (360) + Padding
-
-            const scaleHeight = availableHeight / 1600;
-            const scaleWidth = availableWidth / 1080;
-
-            const optimalZoom = Math.min(scaleHeight, scaleWidth);
-            setZoom(Math.max(0.3, Math.min(1.0, optimalZoom)));
-        };
-
-        handleResize(); // Run on mount
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-
-
-    // Config State
     const [config, setConfig] = useState({
         coordinates: {
-            // 27:40 Ratio (1080x1600)
-            photo: { x: 540, y: 400, radius: 180, shape: 'circle' },
-            name: { x: 540, y: 850 },
-            designation: { x: 540, y: 950 },
-            company: { x: 540, y: 1050 },
-            email: { x: 540, y: 1150 },
-            website: { x: 540, y: 1250 },
-            address: { x: 540, y: 1350 }
+            photo: { x: 540, y: 960, radius: 150, shape: 'circle' }, // Center photo
         },
-        typography: {
-            fontFamily: 'Outfit',
-            name: { size: 60, color: '#000000', weight: 'bold', align: 'center' },
-            designation: { size: 35, color: '#000000', weight: 'normal', align: 'center' },
-            company: { size: 30, color: '#000000', weight: 'normal', align: 'center' },
-            email: { size: 28, color: '#000000', weight: 'normal', align: 'center' },
-            website: { size: 28, color: '#000000', weight: 'normal', align: 'center' },
-            address: { size: 28, color: '#000000', weight: 'normal', align: 'center' }
-        },
-        validation: { nameLimit: 30, companyLimit: 50 },
-        backgroundImageUrl: '',
-        watermarkUrl: '',
+        typography: {},
+        validation: {}, // required fields
         posterElements: {
             // Default Static Content
             website: 'WWW.TECHCONF.COM',
             address: 'ADDRESS',
-            time: '', location: '', cta: '', qrEnabled: true
+            time: '', location: '', cta: '', qrEnabled: true, qrSize: 250
         },
         branding: { colors: ['#ffffff', '#000000', '#8b5cf6'] },
         sponsors: [],
         roles: []
     });
 
-    const [bgFile, setBgFile] = useState(null);
-    const [bgPreview, setBgPreview] = useState('');
+    const [newFieldName, setNewFieldName] = useState('');
+    const [dragging, setDragging] = useState(null);
 
-    // History Manager (Debounced)
+    // History Management
+    useEffect(() => {
+        if (history.length === 0 && config) {
+            setHistory([JSON.stringify(config)]);
+            setHistoryIndex(0);
+        }
+    }, [loading]);
+
+    // Auto-save history on config change (debounced)
     useEffect(() => {
         const timer = setTimeout(() => {
-            if (config && (history.length === 0 || JSON.stringify(config) !== JSON.stringify(history[historyIndex]))) {
+            if (history[historyIndex] !== JSON.stringify(config)) {
                 const newHistory = history.slice(0, historyIndex + 1);
-                if (newHistory.length > 20) newHistory.shift(); // Limit to 20 steps
-                newHistory.push(JSON.parse(JSON.stringify(config)));
+                newHistory.push(JSON.stringify(config));
+                if (newHistory.length > 20) newHistory.shift(); // Limit history
                 setHistory(newHistory);
                 setHistoryIndex(newHistory.length - 1);
             }
-        }, 800);
+        }, 500);
         return () => clearTimeout(timer);
     }, [config]);
 
     const undo = () => {
         if (historyIndex > 0) {
-            const prev = history[historyIndex - 1];
-            setHistoryIndex(historyIndex - 1);
-            setConfig(prev);
+            const prevState = JSON.parse(history[historyIndex - 1]);
+            setConfig(prevState);
+            setHistoryIndex(prev => prev - 1);
         }
     };
 
     const redo = () => {
         if (historyIndex < history.length - 1) {
-            const next = history[historyIndex + 1];
-            setHistoryIndex(historyIndex + 1);
-            setConfig(next);
+            const nextState = JSON.parse(history[historyIndex + 1]);
+            setConfig(nextState);
+            setHistoryIndex(prev => prev + 1);
         }
     };
 
-    // UI States
-    const imageRef = useRef(null);
-    const [dragging, setDragging] = useState(null);
-    const [selectedField, setSelectedField] = useState(null);
-    const [newFieldName, setNewFieldName] = useState('');
-    const [newRoleName, setNewRoleName] = useState('');
-
-    // Keyboard Navigation for Moving Elements
+    // Auto-Fit Zoom on Load
     useEffect(() => {
+        // Wait a bit for layout to settle
+        const timer = setTimeout(() => {
+            const container = document.getElementById('canvas-container');
+            if (container) {
+                const padding = 80; // Padding around the canvas
+                const w = container.clientWidth - padding;
+                const h = container.clientHeight - padding;
+                // Calculate scale to fit 1080x1600 into available space
+                const optimal = Math.min(w / 1080, h / 1600);
+                setZoom(Math.max(0.2, Math.min(1.5, optimal))); // Clamp between 0.2 and 1.5
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [loading, activeTab]);
+
+    useEffect(() => {
+        // Keyboard shortcuts for nudging
         const handleKeyDown = (e) => {
             if (!selectedField || !config.coordinates[selectedField]) return;
+            // Only if not typing in an input
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
 
-            // Ignore if typing in an input
-            if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
-
-            const step = e.shiftKey ? 10 : 1;
-            let { x, y } = config.coordinates[selectedField];
+            const { x, y } = config.coordinates[selectedField];
+            const shift = e.shiftKey ? 10 : 1;
 
             switch (e.key) {
-                case 'ArrowUp': y -= step; break;
-                case 'ArrowDown': y += step; break;
-                case 'ArrowLeft': x -= step; break;
-                case 'ArrowRight': x += step; break;
+                case 'ArrowUp': updateCoordinate(selectedField, x, y - shift); break;
+                case 'ArrowDown': updateCoordinate(selectedField, x, y + shift); break;
+                case 'ArrowLeft': updateCoordinate(selectedField, x - shift, y); break;
+                case 'ArrowRight': updateCoordinate(selectedField, x + shift, y); break;
                 case 'Delete':
                 case 'Backspace':
-                    if (!['name', 'company', 'designation', 'photo', 'date', 'email', 'website', 'address'].includes(selectedField)) {
+                    if (!['name', 'company', 'photo'].includes(selectedField)) {
                         removeField(selectedField);
-                        setSelectedField(null);
                     }
                     break;
                 default: return;
@@ -346,7 +331,7 @@ const EventEditor = () => {
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === tab ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === tab ? 'bg-white/10 text-white shadow-sm' : 'text-slate-500 hover:text-white'}`}
                         >
                             {tab === 'config' ? 'Design' : 'Data'}
                         </button>
@@ -606,14 +591,34 @@ const EventEditor = () => {
                                                             </div>
                                                         ))}
                                                     </div>
-                                                    <div className="flex items-center justify-between bg-black/20 p-3 rounded-lg border border-white/5">
-                                                        <span className="text-xs font-bold text-slate-300 flex items-center gap-2 uppercase tracking-wide"><FaQrcode /> QR Code</span>
-                                                        <button
-                                                            onClick={() => setConfig({ ...config, posterElements: { ...config.posterElements, qrEnabled: !config.posterElements?.qrEnabled } })}
-                                                            className={`w-10 h-5 rounded-full relative transition-colors ${config.posterElements?.qrEnabled ? 'bg-primary' : 'bg-white/10'}`}
-                                                        >
-                                                            <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all shadow-sm ${config.posterElements?.qrEnabled ? 'left-6' : 'left-1'}`} />
-                                                        </button>
+
+                                                    <div className="mt-6 border-t border-white/10 pt-4">
+                                                        <div className="flex items-center justify-between mb-4">
+                                                            <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                                                                <FaQrcode /> QR Code
+                                                            </label>
+                                                            <button
+                                                                onClick={() => setConfig({ ...config, posterElements: { ...config.posterElements, qrEnabled: !config.posterElements?.qrEnabled } })}
+                                                                className={`w-10 h-5 rounded-full relative transition-colors ${config.posterElements?.qrEnabled ? 'bg-primary' : 'bg-white/10'}`}
+                                                            >
+                                                                <span className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${config.posterElements?.qrEnabled ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                                                            </button>
+                                                        </div>
+
+                                                        {config.posterElements?.qrEnabled && (
+                                                            <div>
+                                                                <label className="text-xs font-bold text-slate-500 block mb-2 uppercase flex justify-between">
+                                                                    <span>Size</span>
+                                                                    <span className="text-white">{config.posterElements?.qrSize || 250}px</span>
+                                                                </label>
+                                                                <input
+                                                                    type="range" min="100" max="500"
+                                                                    value={config.posterElements?.qrSize || 250}
+                                                                    onChange={(e) => setConfig({ ...config, posterElements: { ...config.posterElements, qrSize: parseInt(e.target.value) } })}
+                                                                    className="w-full accent-primary h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                                                                />
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </motion.div>
@@ -749,7 +754,15 @@ const EventEditor = () => {
 
                                                 {/* QR Code */}
                                                 {config.posterElements?.qrEnabled && (
-                                                    <div className="absolute bottom-[200px] right-[200px] w-[200px] aspect-square bg-white p-4 border-4 border-dashed border-slate-300 opacity-50">
+                                                    <div
+                                                        className="absolute border-4 border-dashed border-slate-300 opacity-50 bg-white"
+                                                        style={{
+                                                            width: (config.posterElements?.qrSize || 250) + 'px',
+                                                            height: (config.posterElements?.qrSize || 250) + 'px',
+                                                            bottom: '200px',
+                                                            right: '50px' // Default position, ideally this should be draggable too
+                                                        }}
+                                                    >
                                                         <div className="w-full h-full bg-black/10 flex items-center justify-center text-slate-500 text-sm font-bold">QR AREA</div>
                                                     </div>
                                                 )}

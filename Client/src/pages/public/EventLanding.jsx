@@ -228,6 +228,7 @@ const PublicEventPage = () => {
             // LAYER 4: QR Code
             if (config.posterElements?.qrEnabled) {
                 try {
+                    const qrSize = config.posterElements.qrSize || 250;
                     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.href)}`;
                     const qrImg = await new Promise((resolve) => {
                         const i = new Image(); i.crossOrigin = 'anonymous'; i.src = qrUrl;
@@ -236,8 +237,10 @@ const PublicEventPage = () => {
                     });
                     if (qrImg) {
                         qrImg.set({
-                            left: 1080 - 250 - 50, top: 1920 - 250 - 50,
-                            scaleX: 250 / qrImg.width, scaleY: 250 / qrImg.height,
+                            left: 1080 - qrSize - 50,
+                            top: 1600 - qrSize - 50,
+                            scaleX: qrSize / qrImg.width,
+                            scaleY: qrSize / qrImg.height,
                             selectable: false
                         });
                         fabricCanvas.add(qrImg);
@@ -403,14 +406,14 @@ const PublicEventPage = () => {
 
                             {/* Inputs */}
                             <div className="space-y-4">
-                                {fields.filter(f => ['name', 'company', 'email', 'website', 'address'].includes(f)).map(key => (
+                                {fields.filter(f => !['photo', 'designation'].includes(f)).map(key => (
                                     <div key={key}>
-                                        <label className="block text-xs uppercase tracking-widest text-slate-500 mb-2">{key}</label>
+                                        <label className="block text-xs uppercase tracking-widest text-slate-500 mb-2">{key.replace(/_/g, ' ')}</label>
                                         <input
                                             name={key}
                                             value={formData[key] || ''}
                                             onChange={handleInputChange}
-                                            placeholder={`Enter your ${key}`}
+                                            placeholder={`Enter your ${key.replace(/_/g, ' ')}`}
                                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-primary focus:bg-white/10 transition-all font-medium"
                                         />
                                     </div>
