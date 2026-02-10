@@ -49,7 +49,7 @@ const Sidebar = () => {
                         className={({ isActive }) =>
                             `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden ${isActive
                                 ? 'bg-primary/10 text-primary shadow-lg shadow-primary/5'
-                                : 'text-text-muted hover:text-text-main hover:bg-white/5'
+                                : 'text-text-muted hover:text-text-main hover:bg-text-main/5'
                             }`
                         }
                     >

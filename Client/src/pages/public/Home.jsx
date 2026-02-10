@@ -89,12 +89,12 @@ const Home = () => {
                     </form>
 
                     <div className="mt-8 pt-8 border-t border-white/5 flex justify-between items-center">
-                        <span className="text-xs text-slate-400 uppercase tracking-widest">Admin Portal</span>
+                        <span className="text-xs text-slate-400 uppercase tracking-widest">  </span>
                         <button
                             onClick={() => navigate('/admin/login')}
                             className="text-xs text-text-muted hover:text-text-main transition-colors flex items-center gap-1"
                         >
-                            Secure Login &rarr;
+                            {/* Secure Login &rarr; */}
                         </button>
                     </div>
                 </motion.div>

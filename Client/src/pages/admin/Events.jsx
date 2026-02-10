@@ -66,12 +66,12 @@ const Events = () => {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">Events</h1>
-                    <p className="text-slate-400">Manage your poster generation campaigns</p>
+                    <h1 className="text-3xl font-bold text-text-main">Events</h1>
+                    <p className="text-text-muted">Manage your poster generation campaigns</p>
                 </div>
                 <button
                     onClick={() => navigate('/admin/dashboard')} // Dashboard has the create modal
-                    className="flex items-center gap-2 px-4 py-2 bg-primary rounded-xl font-medium text-white shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-text-main text-bg-primary rounded-xl font-medium shadow-lg hover:opacity-90 transition-all"
                 >
                     <FaPlus /> Create Event
                 </button>
@@ -82,26 +82,26 @@ const Events = () => {
                     <div
                         key={event._id}
                         onClick={() => navigate(`/admin/event/${event._id}`)}
-                        className="group bg-bg-secondary border border-white/5 rounded-2xl p-6 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5 relative overflow-hidden cursor-pointer"
+                        className="group bg-bg-secondary border border-border-color rounded-2xl p-6 hover:border-primary/30 transition-all hover:shadow-xl relative overflow-hidden cursor-pointer"
                     >
                         <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                             <button
                                 onClick={(e) => { e.stopPropagation(); navigate(`/admin/event/${event._id}`) }}
-                                className="p-2 bg-white/10 rounded-lg text-white hover:bg-primary backdrop-blur-sm"
+                                className="p-2 bg-text-main/10 rounded-lg text-text-main hover:bg-primary hover:text-white backdrop-blur-sm transition-colors"
                                 title="Edit"
                             >
                                 <FaEdit />
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); window.open(`/${event.slug}`, '_blank') }}
-                                className="p-2 bg-white/10 rounded-lg text-white hover:bg-primary backdrop-blur-sm"
+                                className="p-2 bg-text-main/10 rounded-lg text-text-main hover:bg-primary hover:text-white backdrop-blur-sm transition-colors"
                                 title="View Public Page"
                             >
                                 <FaEye />
                             </button>
                             <button
                                 onClick={(e) => handleDelete(e, event._id)}
-                                className="p-2 bg-white/10 rounded-lg text-white hover:bg-red-500 backdrop-blur-sm transition-colors"
+                                className="p-2 bg-text-main/10 rounded-lg text-text-main hover:bg-red-500 hover:text-white backdrop-blur-sm transition-colors"
                                 title="Delete"
                             >
                                 <FaTrash />
@@ -112,7 +112,7 @@ const Events = () => {
                             <button
                                 onClick={(e) => toggleStatus(e, event)}
                                 className={`px-3 py-1 rounded-full text-xs font-bold border transition-all z-20 relative ${event.status === 'published'
-                                    ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
+                                    ? 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20'
                                     : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20'
                                     }`}
                             >
@@ -120,17 +120,17 @@ const Events = () => {
                             </button>
                         </div>
 
-                        <h3 className="text-xl font-bold text-white mb-1 group-hover:text-primary transition-colors">{event.title}</h3>
-                        <p className="text-sm text-slate-500 mb-4 font-mono">/{event.slug}</p>
+                        <h3 className="text-xl font-bold text-text-main mb-1 group-hover:text-primary transition-colors">{event.title}</h3>
+                        <p className="text-sm text-text-muted mb-4 font-mono">/{event.slug}</p>
 
-                        <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/5">
+                        <div className="flex items-center justify-between mt-6 pt-4 border-t border-border-color">
                             <div className="text-center">
-                                <div className="text-lg font-bold text-white">{event.leads?.length || 0}</div>
-                                <div className="text-xs text-slate-500 uppercase tracking-wider">Leads</div>
+                                <div className="text-lg font-bold text-text-main">{event.leads?.length || 0}</div>
+                                <div className="text-xs text-text-muted uppercase tracking-wider">Leads</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-lg font-bold text-white">{new Date(event.createdAt).toLocaleDateString()}</div>
-                                <div className="text-xs text-slate-500 uppercase tracking-wider">Created</div>
+                                <div className="text-lg font-bold text-text-main">{new Date(event.createdAt).toLocaleDateString()}</div>
+                                <div className="text-xs text-text-muted uppercase tracking-wider">Created</div>
                             </div>
                         </div>
                     </div>

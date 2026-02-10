@@ -58,8 +58,8 @@ const Leads = () => {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">Leads</h1>
-                    <p className="text-slate-400">Manage and export all your accumulated leads</p>
+                    <h1 className="text-3xl font-bold text-text-main">Leads</h1>
+                    <p className="text-text-muted">Manage and export all your accumulated leads</p>
                 </div>
                 <button
                     onClick={exportCSV}
@@ -69,15 +69,15 @@ const Leads = () => {
                 </button>
             </div>
 
-            <div className="bg-bg-secondary border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+            <div className="bg-bg-secondary border border-border-color rounded-2xl overflow-hidden shadow-xl">
                 {/* Toolbar */}
-                <div className="p-4 border-b border-white/5 flex gap-4">
+                <div className="p-4 border-b border-border-color flex gap-4">
                     <div className="relative flex-1 max-w-md">
-                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
                         <input
                             type="text"
                             placeholder="Search leads..."
-                            className="w-full pl-10 pr-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary"
+                            className="w-full pl-10 pr-4 py-2 bg-bg-primary border border-border-color rounded-lg text-text-main focus:outline-none focus:border-primary placeholder:text-text-muted"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -87,7 +87,7 @@ const Leads = () => {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-white/5 text-slate-400 text-sm uppercase tracking-wider">
+                            <tr className="bg-bg-tertiary text-text-muted text-sm uppercase tracking-wider border-b border-border-color">
                                 <th className="p-4 font-semibold">User</th>
                                 <th className="p-4 font-semibold">Role/Designation</th>
                                 <th className="p-4 font-semibold">Company</th>
@@ -95,41 +95,41 @@ const Leads = () => {
                                 <th className="p-4 font-semibold text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className="divide-y divide-border-color">
                             {loading ? (
                                 <tr>
-                                    <td colSpan="5" className="p-8 text-center text-slate-500">Loading leads...</td>
+                                    <td colSpan="5" className="p-8 text-center text-text-muted">Loading leads...</td>
                                 </tr>
                             ) : filteredLeads.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="p-8 text-center text-slate-500">No leads found.</td>
+                                    <td colSpan="5" className="p-8 text-center text-text-muted">No leads found.</td>
                                 </tr>
                             ) : (
                                 filteredLeads.map((lead, idx) => (
-                                    <tr key={idx} className="hover:bg-white/5 transition-colors group">
+                                    <tr key={idx} className="hover:bg-text-main/5 transition-colors group">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
                                                 {lead.photoUrl ? (
-                                                    <img src={lead.photoUrl} alt="" className="w-10 h-10 rounded-full object-cover border border-white/10" />
+                                                    <img src={lead.photoUrl} alt="" className="w-10 h-10 rounded-full object-cover border border-border-color" />
                                                 ) : (
                                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-xs">
                                                         {lead.name?.charAt(0)}
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <div className="font-semibold text-white">{lead.name}</div>
-                                                    <div className="text-xs text-slate-500">{lead.mobile}</div>
+                                                    <div className="font-semibold text-text-main">{lead.name}</div>
+                                                    <div className="text-xs text-text-muted">{lead.mobile}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="p-4">
-                                            <div className="text-sm text-slate-300">{lead.designation}</div>
+                                            <div className="text-sm text-text-main">{lead.designation}</div>
                                             <div className="text-xs text-primary/80">{lead.role}</div>
                                         </td>
-                                        <td className="p-4 text-slate-300">{lead.company}</td>
-                                        <td className="p-4 text-slate-300">{lead.eventName}</td>
+                                        <td className="p-4 text-text-main">{lead.company}</td>
+                                        <td className="p-4 text-text-main">{lead.eventName}</td>
                                         <td className="p-4 text-right">
-                                            <button className="text-slate-500 hover:text-red-400 p-2 rounded-lg hover:bg-white/5 transition-colors">
+                                            <button className="text-text-muted hover:text-red-400 p-2 rounded-lg hover:bg-text-main/10 transition-colors">
                                                 <FaTrash />
                                             </button>
                                         </td>

@@ -67,12 +67,12 @@ const Dashboard = () => {
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-                    <p className="text-slate-400">Here's what's happening with your events today.</p>
+                    <h1 className="text-3xl font-bold text-text-main mb-2">Welcome Back</h1>
+                    <p className="text-text-muted">Here's what's happening with your events today.</p>
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="px-6 py-3 rounded-xl font-bold bg-white text-black hover:bg-slate-200 transition-all shadow-lg shadow-white/5 flex items-center justify-center gap-2"
+                    className="px-6 py-3 rounded-xl font-bold bg-text-main text-bg-primary hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2"
                 >
                     <FaPlus /> Create New Event
                 </button>
@@ -89,8 +89,8 @@ const Dashboard = () => {
                             <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center text-xl mb-4`}>
                                 {stat.icon}
                             </div>
-                            <p className="text-slate-400 text-sm font-medium uppercase tracking-wider">{stat.label}</p>
-                            <h3 className="text-4xl font-bold text-white mt-1">{stat.value}</h3>
+                            <p className="text-text-muted text-sm font-medium uppercase tracking-wider">{stat.label}</p>
+                            <h3 className="text-4xl font-bold text-text-main mt-1">{stat.value}</h3>
                         </div>
                     </div>
                 ))}
@@ -99,15 +99,15 @@ const Dashboard = () => {
             {/* Recent Events Section */}
             <div>
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-white">Recent Events</h2>
-                    <button onClick={() => navigate('/admin/events')} className="text-sm text-primary hover:text-white transition-colors">View All</button>
+                    <h2 className="text-xl font-bold text-text-main">Recent Events</h2>
+                    <button onClick={() => navigate('/admin/events')} className="text-sm text-primary hover:text-text-main transition-colors">View All</button>
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-12 text-slate-500">Loading...</div>
+                    <div className="text-center py-12 text-text-muted">Loading...</div>
                 ) : events.length === 0 ? (
-                    <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl">
-                        <p className="text-slate-400 mb-4">No events found</p>
+                    <div className="text-center py-12 border border-dashed border-border-color rounded-2xl">
+                        <p className="text-text-muted mb-4">No events found</p>
                         <button onClick={() => setShowCreateModal(true)} className="text-primary hover:underline">Create your first event</button>
                     </div>
                 ) : (
@@ -116,20 +116,20 @@ const Dashboard = () => {
                             <div
                                 key={event._id}
                                 onClick={() => navigate(`/admin/event/${event._id}`)}
-                                className="bg-bg-secondary border border-white/5 rounded-2xl p-5 hover:border-primary/50 cursor-pointer transition-all group"
+                                className="bg-bg-secondary border border-border-color rounded-2xl p-5 hover:border-primary/50 cursor-pointer transition-all group shadow-sm"
                             >
                                 <div className="flex justify-between items-start mb-4">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center text-white font-bold">
+                                    <div className="w-10 h-10 rounded-full bg-bg-tertiary border border-border-color flex items-center justify-center text-text-main font-bold">
                                         {event.title.charAt(0)}
                                     </div>
-                                    <span className={`px-2 py-1 rounded text-xs font-medium border ${event.status === 'published' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                                    <span className={`px-2 py-1 rounded text-xs font-medium border ${event.status === 'published' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-slate-500/10 text-slate-500 border-slate-500/20'
                                         }`}>
                                         {event.status || 'Draft'}
                                     </span>
                                 </div>
-                                <h3 className="text-lg font-bold text-white group-hover:text-primary transition-colors">{event.title}</h3>
-                                <p className="text-sm text-slate-500 mb-4">/{event.slug}</p>
-                                <div className="flex items-center gap-4 text-xs text-slate-400">
+                                <h3 className="text-lg font-bold text-text-main group-hover:text-primary transition-colors">{event.title}</h3>
+                                <p className="text-sm text-text-muted mb-4">/{event.slug}</p>
+                                <div className="flex items-center gap-4 text-xs text-text-muted">
                                     <span className="flex items-center gap-1"><FaUsers /> {event.leads?.length || 0} Leads</span>
                                     <span>{new Date(event.createdAt).toLocaleDateString()}</span>
                                 </div>
@@ -141,15 +141,15 @@ const Dashboard = () => {
 
             {/* Create Modal */}
             {showCreateModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
-                    <div className="bg-bg-secondary border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl animate-[fadeIn_0.3s_ease-out]">
-                        <h3 className="text-2xl font-bold text-white mb-6">Create New Event</h3>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+                    <div className="bg-bg-secondary border border-border-color rounded-2xl p-8 max-w-md w-full shadow-2xl animate-[fadeIn_0.3s_ease-out]">
+                        <h3 className="text-2xl font-bold text-text-main mb-6">Create New Event</h3>
                         <form onSubmit={handleCreate} className="space-y-6">
                             <div>
-                                <label className="block text-xs font-semibold tracking-widest uppercase text-slate-500 mb-2">Event Title</label>
+                                <label className="block text-xs font-semibold tracking-widest uppercase text-text-muted mb-2">Event Title</label>
                                 <input
                                     type="text"
-                                    className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-primary transition-all"
+                                    className="w-full px-4 py-3 bg-bg-tertiary border border-border-color rounded-xl text-text-main focus:outline-none focus:border-primary transition-all placeholder:text-text-muted/50"
                                     placeholder="e.g., Tech Summit 2026"
                                     value={newEvent.title}
                                     onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
@@ -158,10 +158,10 @@ const Dashboard = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold tracking-widest uppercase text-slate-500 mb-2">URL Slug</label>
+                                <label className="block text-xs font-semibold tracking-widest uppercase text-text-muted mb-2">URL Slug</label>
                                 <input
                                     type="text"
-                                    className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-primary transition-all"
+                                    className="w-full px-4 py-3 bg-bg-tertiary border border-border-color rounded-xl text-text-main focus:outline-none focus:border-primary transition-all placeholder:text-text-muted/50"
                                     placeholder="e.g., tech-summit-2026"
                                     value={newEvent.slug}
                                     onChange={(e) => setNewEvent({ ...newEvent, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
@@ -169,10 +169,10 @@ const Dashboard = () => {
                                 />
                             </div>
                             <div className="flex gap-3 pt-2">
-                                <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 px-4 py-3 rounded-xl border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+                                <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 px-4 py-3 rounded-xl border border-border-color text-text-muted hover:text-text-main hover:bg-bg-tertiary transition-all">
                                     Cancel
                                 </button>
-                                <button type="submit" disabled={creating} className="flex-1 px-4 py-3 rounded-xl font-bold bg-white text-black hover:bg-slate-200 transition-all disabled:opacity-50">
+                                <button type="submit" disabled={creating} className="flex-1 px-4 py-3 rounded-xl font-bold bg-text-main text-bg-primary hover:opacity-90 transition-all disabled:opacity-50">
                                     {creating ? 'Creating...' : 'Create Event'}
                                 </button>
                             </div>

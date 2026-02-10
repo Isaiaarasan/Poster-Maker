@@ -161,19 +161,21 @@ const PublicEventPage = () => {
                         let clipPath;
                         const size = radius * 2;
 
-                        // Clip Path must be strictly centered at 0,0 relative to the object center in modern Fabric
+                        // Use absolute positioning for clipPath to avoid scaling inheritance from the image
                         if (shape === 'square') {
                             clipPath = new fabricInstance.Rect({
                                 width: size, height: size,
                                 rx: 20, ry: 20,
                                 originX: 'center', originY: 'center',
-                                left: 0, top: 0 // Relative to object center
+                                absolutePositioned: true,
+                                left: x, top: y
                             });
                         } else {
                             clipPath = new fabricInstance.Circle({
                                 radius: radius,
                                 originX: 'center', originY: 'center',
-                                left: 0, top: 0
+                                absolutePositioned: true,
+                                left: x, top: y
                             });
                         }
 
@@ -313,29 +315,22 @@ const PublicEventPage = () => {
                 quality: 1
             });
 
-            // Convert Data URL to Blob
             const res = await fetch(highResDataUrl);
             const blob = await res.blob();
 
-            // 2. Upload Final Poster
             const posterData = new FormData();
-            posterData.append('photo', blob, 'poster.png'); // Re-using the 'photo' endpoint for simplicity, or we can make a new one
+            posterData.append('photo', blob, 'poster.png');
 
-            // We need to upload this to a persisted location
-            // Using the existing upload endpoint which works for temp uploads, 
-            // but ideally we should have a `upload-generated` endpoint.
-            // Let's use the existing one for now, it returns a URL.
             const uploadRes = await axios.post('/api/events/poster/upload', posterData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             const finalPosterUrl = uploadRes.data.url;
             setGeneratedImage(finalPosterUrl);
 
-            // 3. Submit Lead with the URL
             await axios.post(`/api/events/${slug}/lead`, {
                 ...formData,
                 generatedImageUrl: finalPosterUrl,
-                photoUrl: null // We handled generation client side
+                photoUrl: null
             });
 
             setStep(4);
@@ -373,7 +368,7 @@ const PublicEventPage = () => {
     const secondaryColor = event.config.branding?.colors?.[1] || '#6d28d9';
 
     return (
-        <div className="min-h-screen bg-bg-primary text-text-main font-sans flex flex-col md:flex-row overflow-hidden relative" style={{ backgroundColor: event.config.branding?.colors?.[0] || 'var(--bg-primary)', color: 'var(--text-main)' }}>
+        <div className="h-screen bg-bg-primary text-text-main font-sans flex flex-col md:flex-row overflow-hidden relative" style={{ backgroundColor: event.config.branding?.colors?.[0] || 'var(--bg-primary)', color: 'var(--text-main)' }}>
 
             {/* Background Ambience */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -381,161 +376,159 @@ const PublicEventPage = () => {
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/20 blur-[150px] rounded-full"></div>
             </div>
 
-            {/* LEFT PANEL: INPUT */}
-            <div className="w-full md:w-5/12 p-6 md:p-12 relative z-10 flex flex-col h-full overflow-y-auto custom-scrollbar backdrop-blur-md bg-glass-bg border-r border-glass-border">
-                <div className="mb-8">
-                    <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-main to-text-muted mb-2">
-                        {event.title}
-                    </h1>
-                    <p className="text-sm text-text-muted">Create your official event badge in seconds.</p>
-                </div>
+            {/* LEFT PANEL: INPUT - Theme Responsive */}
+            <div className="w-full md:w-5/12 relative z-10 flex flex-col h-full overflow-y-auto custom-scrollbar backdrop-blur-xl bg-bg-secondary/95 border-r border-border-color shadow-2xl transition-colors duration-300">
+                <div className="p-6 md:p-12">
+                    <div className="mb-8">
+                        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-main to-text-muted mb-2">
+                            {event.title}
+                        </h1>
+                        <p className="text-sm text-text-muted">Create your official event badge in seconds.</p>
+                    </div>
 
-                <AnimatePresence mode='wait'>
-                    {step === 1 && (
-                        <motion.div
-                            key="input"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="space-y-6"
-                        >
-                            {/* Role Selection */}
-                            {event.config.roles?.length > 0 && (
-                                <div>
-                                    <label className="block text-xs uppercase tracking-widest text-slate-500 mb-3">Select Role</label>
-                                    <div className="flex gap-3 flex-wrap">
-                                        {event.config.roles.map(r => (
-                                            <button
-                                                key={r.label}
-                                                onClick={() => setFormData({ ...formData, role: r.label })}
-                                                style={{
-                                                    backgroundColor: formData.role === r.label ? (primaryColor || '#8b5cf6') : 'rgba(255,255,255,0.05)',
-                                                    borderColor: formData.role === r.label ? (primaryColor || '#8b5cf6') : 'rgba(255,255,255,0.1)',
-                                                    color: formData.role === r.label ? '#fff' : '#94a3b8'
-                                                }}
-                                                className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all border shadow-lg`}
-                                            >
-                                                {r.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Dynamic Inputs */}
-                            <div className="space-y-4">
-                                {fields.map(key => {
-                                    const fieldConfig = event.config.formFields?.[key] || {};
-                                    const label = fieldConfig.label || key.replace(/_/g, ' ');
-                                    const placeholder = fieldConfig.placeholder || `Enter your ${label}`;
-                                    const isRequired = fieldConfig.required;
-
-                                    // Infer type
-                                    let type = "text";
-                                    if (key.includes('email')) type = "email";
-                                    if (key.includes('mobile') || key.includes('phone')) type = "tel";
-
-                                    return (
-                                        <div key={key}>
-                                            <label className="block text-xs uppercase tracking-widest text-text-muted mb-2 font-bold">
-                                                {label} {isRequired && <span className="text-red-500">*</span>}
-                                            </label>
-                                            <input
-                                                name={key}
-                                                type={type}
-                                                required={isRequired}
-                                                value={formData[key] || ''}
-                                                onChange={handleInputChange}
-                                                placeholder={placeholder}
-                                                className="w-full bg-glass-bg border border-glass-border rounded-xl px-4 py-3.5 text-text-main focus:outline-none focus:bg-glass-bg transition-all font-medium placeholder:text-text-main/50"
-                                                style={{ borderColor: 'var(--glass-border)' }}
-                                                onFocus={(e) => e.target.style.borderColor = primaryColor || 'var(--primary)'}
-                                                onBlur={(e) => e.target.style.borderColor = 'var(--glass-border)'}
-                                            />
+                    <AnimatePresence mode='wait'>
+                        {step === 1 && (
+                            <motion.div
+                                key="input"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                className="space-y-6"
+                            >
+                                {/* Role Selection */}
+                                {event.config.roles?.length > 0 && (
+                                    <div>
+                                        <label className="block text-xs uppercase tracking-widest text-text-muted mb-3 font-bold">Select Role</label>
+                                        <div className="flex gap-3 flex-wrap">
+                                            {event.config.roles.map(r => (
+                                                <button
+                                                    key={r.label}
+                                                    onClick={() => setFormData({ ...formData, role: r.label })}
+                                                    style={{
+                                                        backgroundColor: formData.role === r.label ? (primaryColor || '#8b5cf6') : 'var(--bg-tertiary)',
+                                                        borderColor: formData.role === r.label ? (primaryColor || '#8b5cf6') : 'var(--border-color)',
+                                                        color: formData.role === r.label ? '#fff' : 'var(--text-muted)'
+                                                    }}
+                                                    className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all border shadow-sm hover:border-primary/50`}
+                                                >
+                                                    {r.label}
+                                                </button>
+                                            ))}
                                         </div>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Photo Upload */}
-                            {event.config.coordinates.photo && (
-                                <div>
-                                    <label className="block text-xs uppercase tracking-widest text-text-muted mb-2 font-bold">Profile Photo <span className="text-red-500">*</span></label>
-                                    <div className="flex items-center gap-4">
-                                        <label className="flex-1 cursor-pointer group relative overflow-hidden rounded-xl">
-                                            <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-                                            <div
-                                                className="h-28 border-2 border-dashed border-glass-border rounded-xl flex flex-col items-center justify-center gap-2 transition-all bg-glass-bg"
-                                                style={{ borderColor: 'var(--glass-border)' }}
-                                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'; }}
-                                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--glass-border)'; e.currentTarget.style.backgroundColor = 'var(--glass-bg)'; }}
-                                            >
-                                                <FaCamera className="text-2xl text-text-main/70 group-hover:text-text-main" />
-                                                <div className="text-xs text-text-main/70 group-hover:text-text-main font-medium">
-                                                    {photoPreview ? "Change Photo" : "Upload Selfie"}
-                                                </div>
-                                            </div>
-                                        </label>
-                                        {photoPreview && (
-                                            <div className="w-28 h-28 rounded-xl overflow-hidden border-2 shadow-xl" style={{ borderColor: primaryColor || '#8b5cf6' }}>
-                                                <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
-                                            </div>
-                                        )}
                                     </div>
+                                )}
+
+                                {/* Dynamic Inputs */}
+                                <div className="space-y-4">
+                                    {fields.map(key => {
+                                        const fieldConfig = event.config.formFields?.[key] || {};
+                                        const label = fieldConfig.label || key.replace(/_/g, ' ');
+                                        const placeholder = fieldConfig.placeholder || `Enter your ${label}`;
+                                        const isRequired = fieldConfig.required;
+
+                                        // Infer type
+                                        let type = "text";
+                                        if (key.includes('email')) type = "email";
+                                        if (key.includes('mobile') || key.includes('phone')) type = "tel";
+
+                                        return (
+                                            <div key={key}>
+                                                <label className="block text-xs uppercase tracking-widest text-text-muted mb-2 font-bold">
+                                                    {label} {isRequired && <span className="text-red-500">*</span>}
+                                                </label>
+                                                <input
+                                                    name={key}
+                                                    type={type}
+                                                    required={isRequired}
+                                                    value={formData[key] || ''}
+                                                    onChange={handleInputChange}
+                                                    placeholder={placeholder}
+                                                    className="w-full bg-bg-tertiary border border-border-color rounded-xl px-4 py-3.5 text-text-main focus:outline-none focus:bg-bg-primary focus:border-primary/50 transition-all font-medium placeholder:text-text-muted/50"
+                                                    onFocus={(e) => e.target.style.borderColor = primaryColor || 'var(--primary)'}
+                                                    onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
+                                                />
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                            )}
 
-                            <button
-                                onClick={submitLeadAndGenerate}
-                                style={{ background: `linear-gradient(to right, ${primaryColor || '#8b5cf6'}, ${secondaryColor || '#3b82f6'})` }}
-                                className="w-full py-4 text-white font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 text-lg shadow-primary/25"
-                            >
-                                <FaMagic /> Generate Badge
-                            </button>
-                        </motion.div>
-                    )}
+                                {/* Photo Upload */}
+                                {event.config.coordinates.photo && (
+                                    <div>
+                                        <label className="block text-xs uppercase tracking-widest text-text-muted mb-2 font-bold">Profile Photo <span className="text-red-500">*</span></label>
+                                        <div className="flex items-center gap-4">
+                                            <label className="flex-1 cursor-pointer group relative overflow-hidden rounded-xl">
+                                                <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                                                <div
+                                                    className="h-28 border-2 border-dashed border-border-color rounded-xl flex flex-col items-center justify-center gap-2 transition-all bg-bg-tertiary hover:bg-bg-primary hover:border-primary/50 group-hover:text-primary"
+                                                >
+                                                    <FaCamera className="text-2xl text-text-muted group-hover:text-primary transition-colors" />
+                                                    <div className="text-xs text-text-muted group-hover:text-text-main font-medium">
+                                                        {photoPreview ? "Change Photo" : "Upload Selfie"}
+                                                    </div>
+                                                </div>
+                                            </label>
+                                            {photoPreview && (
+                                                <div className="w-28 h-28 rounded-xl overflow-hidden border-2 shadow-xl" style={{ borderColor: primaryColor || '#8b5cf6' }}>
+                                                    <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={submitLeadAndGenerate}
+                                    style={{ background: `linear-gradient(to right, ${primaryColor || '#8b5cf6'}, ${secondaryColor || '#3b82f6'})` }}
+                                    className="w-full py-4 text-white font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 text-lg shadow-primary/25"
+                                >
+                                    <FaMagic /> Generate Badge
+                                </button>
+                            </motion.div>
+                        )}
 
 
-                    {step === 3 && (
-                        <div className="flex flex-col items-center justify-center h-64">
-                            <FaSpinner className="w-12 h-12 animate-spin mb-4" style={{ color: primaryColor }} />
-                            <h3 className="text-lg font-bold">Creating Magic...</h3>
-                        </div>
-                    )}
-
-                    {step === 4 && (
-                        <motion.div
-                            key="success"
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="text-center bg-white/5 border border-white/10 p-8 rounded-2xl"
-                        >
-                            <FaCheckCircle className="text-5xl mx-auto mb-4" style={{ color: '#22c55e' }} />
-                            <h2 className="text-2xl font-bold mb-2">It's Ready!</h2>
-                            <p className="text-slate-400 mb-6">Download your badge and share it with the world.</p>
-
-                            <button
-                                onClick={handleDownload}
-                                className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2 mb-4 shadow-lg shadow-white/10"
-                            >
-                                <FaDownload /> Download Image
-                            </button>
-
-                            <div className="flex gap-2 justify-center">
-                                <button onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank')} className="p-4 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-[#0077b5] hover:border-[#0077b5] transition-colors"><FaLinkedin className="text-xl" /></button>
-                                <button onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`, '_blank')} className="p-4 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-[#1DA1F2] hover:border-[#1DA1F2] transition-colors"><FaTwitter className="text-xl" /></button>
-                                <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`, '_blank')} className="p-4 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-[#25D366] hover:border-[#25D366] transition-colors"><FaWhatsapp className="text-xl" /></button>
+                        {step === 3 && (
+                            <div className="flex flex-col items-center justify-center h-64">
+                                <FaSpinner className="w-12 h-12 animate-spin mb-4" style={{ color: primaryColor }} />
+                                <h3 className="text-lg font-bold text-text-main">Creating Magic...</h3>
                             </div>
+                        )}
 
-                            <button onClick={() => setStep(1)} className="mt-6 text-xs text-slate-500 hover:text-white underline">Create Another</button>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        {step === 4 && (
+                            <motion.div
+                                key="success"
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="text-center bg-bg-tertiary border border-border-color p-8 rounded-2xl"
+                            >
+                                <FaCheckCircle className="text-5xl mx-auto mb-4" style={{ color: '#22c55e' }} />
+                                <h2 className="text-2xl font-bold mb-2 text-text-main">It's Ready!</h2>
+                                <p className="text-text-muted mb-6">Download your badge and share it with the world.</p>
+
+                                <button
+                                    onClick={handleDownload}
+                                    className="w-full py-4 bg-text-main text-bg-primary font-bold rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 mb-4 shadow-lg"
+                                >
+                                    <FaDownload /> Download Image
+                                </button>
+
+                                <div className="flex gap-2 justify-center">
+                                    <button onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank')} className="p-4 bg-bg-tertiary border border-border-color rounded-xl text-text-main hover:bg-[#0077b5] hover:border-[#0077b5] hover:text-white transition-colors shadow-sm"><FaLinkedin className="text-xl" /></button>
+                                    <button onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`, '_blank')} className="p-4 bg-bg-tertiary border border-border-color rounded-xl text-text-main hover:bg-[#1DA1F2] hover:border-[#1DA1F2] hover:text-white transition-colors shadow-sm"><FaTwitter className="text-xl" /></button>
+                                    <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`, '_blank')} className="p-4 bg-bg-tertiary border border-border-color rounded-xl text-text-main hover:bg-[#25D366] hover:border-[#25D366] hover:text-white transition-colors shadow-sm"><FaWhatsapp className="text-xl" /></button>
+                                </div>
+
+                                <button onClick={() => setStep(1)} className="mt-6 text-xs text-text-muted hover:text-text-main underline">Create Another</button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </div>
 
             {/* RIGHT PANEL: PREVIEW */}
-            <div className="hidden md:flex flex-1 relative items-center justify-center bg-bg-secondary p-12">
-                <div className="relative z-10 h-[85vh] aspect-[27/40] max-w-[600px] shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-neutral-900 group">
+            <div className="hidden md:flex flex-1 relative items-center justify-center bg-bg-secondary p-12 overflow-hidden transition-colors duration-300">
+                <div className="relative z-10 h-[85vh] aspect-[27/40] max-w-[600px] shadow-2xl rounded-2xl overflow-hidden border border-border-color bg-neutral-900 group">
                     {step === 4 && generatedImage ? (
                         <img src={generatedImage} alt="Final" className="w-full h-full object-contain" />
                     ) : (

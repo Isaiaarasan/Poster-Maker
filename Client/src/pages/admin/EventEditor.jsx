@@ -316,19 +316,19 @@ const EventEditor = () => {
     return (
         <div className="flex flex-col h-full bg-bg-primary text-text-main overflow-hidden">
             {/* Toolbar Header */}
-            <div className="h-16 border-b border-white/5 bg-bg-secondary flex items-center justify-between px-6 shrink-0">
+            <div className="h-16 border-b border-border-color bg-bg-secondary flex items-center justify-between px-6 shrink-0">
                 <div className="flex items-center gap-4">
-                    <Link to="/admin/events" className="p-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors">
+                    <Link to="/admin/events" className="p-2 hover:bg-text-main/5 rounded-full text-text-muted hover:text-text-main transition-colors">
                         <FaArrowLeft />
                     </Link>
                     <div>
-                        <h1 className="font-bold text-lg leading-tight">{event?.title}</h1>
-                        <div className="flex items-center gap-3 text-xs text-slate-400 font-mono mt-1">
+                        <h1 className="font-bold text-lg leading-tight text-text-main">{event?.title}</h1>
+                        <div className="flex items-center gap-3 text-xs text-text-muted font-mono mt-1">
                             <span>/{event?.slug}</span>
                             <button
                                 onClick={() => setEvent({ ...event, status: event.status === 'published' ? 'draft' : 'published' })}
                                 className={`px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wider transition-all ${event?.status === 'published'
-                                    ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
+                                    ? 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20'
                                     : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20'
                                     }`}
                             >
@@ -338,12 +338,12 @@ const EventEditor = () => {
                     </div>
                 </div>
 
-                <div className="flex bg-black/20 p-1 rounded-lg">
+                <div className="flex bg-bg-tertiary p-1 rounded-lg border border-border-color">
                     {['config', 'leads'].map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === tab ? 'bg-white/10 text-white shadow-sm' : 'text-slate-500 hover:text-white'}`}
+                            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === tab ? 'bg-bg-primary text-text-main shadow-sm' : 'text-text-muted hover:text-text-main'}`}
                         >
                             {tab === 'config' ? 'Design' : 'Data'}
                         </button>
@@ -351,11 +351,11 @@ const EventEditor = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {msg && <span className="text-xs text-green-400 animate-pulse">{msg}</span>}
+                    {msg && <span className="text-xs text-green-500 animate-pulse">{msg}</span>}
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center gap-2 px-6 py-2 bg-white text-black rounded-xl font-bold hover:bg-slate-200 transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 px-6 py-2 bg-text-main text-bg-primary rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50"
                     >
                         {saving ? <FaCog className="animate-spin" /> : <FaSave />}
                         Save Changes
@@ -369,29 +369,29 @@ const EventEditor = () => {
                 {activeTab === 'config' ? (
                     <>
                         {/* LEFT: Tools Panel (Accordion) */}
-                        <div className="w-[360px] bg-bg-secondary border-r border-white/5 flex flex-col z-20 shadow-xl">
+                        <div className="w-[360px] bg-bg-secondary border-r border-border-color flex flex-col z-20 shadow-xl">
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
 
                                 {/* 1. ASSETS */}
-                                <div className="bg-white/5 rounded-xl overflow-hidden border border-white/5">
-                                    <button onClick={() => toggleSection('assets')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
-                                        <span className="font-bold text-sm flex items-center gap-2"><FaImage className="text-primary" /> Assets</span>
-                                        {openSections.assets ? <FaChevronUp className="text-xs opacity-50" /> : <FaChevronDown className="text-xs opacity-50" />}
+                                <div className="bg-bg-tertiary rounded-xl overflow-hidden border border-border-color">
+                                    <button onClick={() => toggleSection('assets')} className="w-full flex items-center justify-between p-4 hover:bg-text-main/5 transition-colors">
+                                        <span className="font-bold text-sm text-text-main flex items-center gap-2"><FaImage className="text-primary" /> Assets</span>
+                                        {openSections.assets ? <FaChevronUp className="text-xs opacity-50 text-text-muted" /> : <FaChevronDown className="text-xs opacity-50 text-text-muted" />}
                                     </button>
                                     <AnimatePresence>
                                         {openSections.assets && (
                                             <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
                                                 <div className="p-4 pt-0">
-                                                    <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Background</label>
+                                                    <label className="block text-xs font-bold text-text-muted mb-2 uppercase tracking-wider">Background</label>
                                                     <div className="relative group cursor-pointer">
                                                         <input id="bg-upload" type="file" onChange={(e) => handleFileChange(e, 'bg')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                                                        <div className="flex items-center gap-3 p-3 border border-dashed border-white/10 rounded-xl hover:bg-white/5 transition-all group-hover:border-primary/50 bg-black/20">
-                                                            <div className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+                                                        <div className="flex items-center gap-3 p-3 border border-dashed border-border-color rounded-xl hover:bg-text-main/5 transition-all group-hover:border-primary/50 bg-bg-primary">
+                                                            <div className="w-12 h-12 bg-bg-tertiary border border-border-color rounded-lg flex items-center justify-center text-text-muted group-hover:text-primary transition-colors">
                                                                 <FaUpload />
                                                             </div>
                                                             <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-medium text-white truncate">{bgFile ? bgFile.name : 'Click to Upload'}</p>
-                                                                <p className="text-[10px] text-slate-500">1080x1600 (27:40)</p>
+                                                                <p className="text-sm font-medium text-text-main truncate">{bgFile ? bgFile.name : 'Click to Upload'}</p>
+                                                                <p className="text-[10px] text-text-muted">1080x1600 (27:40)</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -402,10 +402,10 @@ const EventEditor = () => {
                                 </div>
 
                                 {/* 2. LAYERS */}
-                                <div className="bg-white/5 rounded-xl overflow-hidden border border-white/5">
-                                    <button onClick={() => toggleSection('layers')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
-                                        <span className="font-bold text-sm flex items-center gap-2"><FaLayerGroup className="text-blue-400" /> Layers & Fields</span>
-                                        {openSections.layers ? <FaChevronUp className="text-xs opacity-50" /> : <FaChevronDown className="text-xs opacity-50" />}
+                                <div className="bg-bg-tertiary rounded-xl overflow-hidden border border-border-color">
+                                    <button onClick={() => toggleSection('layers')} className="w-full flex items-center justify-between p-4 hover:bg-text-main/5 transition-colors">
+                                        <span className="font-bold text-sm text-text-main flex items-center gap-2"><FaLayerGroup className="text-blue-400" /> Layers & Fields</span>
+                                        {openSections.layers ? <FaChevronUp className="text-xs opacity-50 text-text-muted" /> : <FaChevronDown className="text-xs opacity-50 text-text-muted" />}
                                     </button>
                                     <AnimatePresence>
                                         {openSections.layers && (
@@ -416,7 +416,7 @@ const EventEditor = () => {
                                                     <div className="flex gap-2">
                                                         <button
                                                             onClick={applyStandardLayout}
-                                                            className="flex-1 text-[10px] bg-white/5 hover:bg-white/10 py-2 rounded text-slate-300 border border-white/10 transition-colors flex items-center justify-center gap-2"
+                                                            className="flex-1 text-[10px] bg-bg-primary hover:bg-text-main/5 py-2 rounded text-text-muted border border-border-color transition-colors flex items-center justify-center gap-2"
                                                         >
                                                             <FaMobileAlt /> Reset Layout
                                                         </button>
@@ -425,7 +425,7 @@ const EventEditor = () => {
                                                                 value={newFieldName}
                                                                 onChange={(e) => setNewFieldName(e.target.value)}
                                                                 placeholder="Add Field..."
-                                                                className="w-full bg-white/5 border border-white/10 rounded-l pl-2 text-xs text-white focus:outline-none focus:border-primary"
+                                                                className="w-full bg-bg-primary border border-border-color rounded-l pl-2 text-xs text-text-main focus:outline-none focus:border-primary"
                                                                 onKeyDown={(e) => e.key === 'Enter' && addCustomField()}
                                                             />
                                                             <button onClick={addCustomField} className="px-3 bg-primary text-white rounded-r hover:bg-primary-light"><FaPlus /></button>
@@ -439,29 +439,29 @@ const EventEditor = () => {
                                                             return (
                                                                 <div
                                                                     key={key}
-                                                                    className={`group border rounded-lg p-3 transition-all cursor-pointer ${isSelected ? 'bg-primary/10 border-primary' : 'bg-black/20 border-white/5 hover:border-white/10'}`}
+                                                                    className={`group border rounded-lg p-3 transition-all cursor-pointer ${isSelected ? 'bg-primary/10 border-primary' : 'bg-bg-primary border-border-color hover:border-text-main/20'}`}
                                                                     onClick={() => setSelectedField(key)}
                                                                 >
                                                                     <div className="flex items-center justify-between mb-2">
                                                                         <div className="flex items-center gap-2">
-                                                                            <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-primary' : 'bg-slate-600'}`}></span>
-                                                                            <span className="text-sm font-bold text-white capitalize">{key.replace('_', ' ')}</span>
+                                                                            <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-primary' : 'bg-slate-500'}`}></span>
+                                                                            <span className="text-sm font-bold text-text-main capitalize">{key.replace('_', ' ')}</span>
                                                                         </div>
                                                                         {!['name', 'company', 'designation', 'photo', 'date', 'email', 'website', 'address'].includes(key) && (
-                                                                            <button onClick={(e) => { e.stopPropagation(); removeField(key); }} className="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"><FaTrash size={10} /></button>
+                                                                            <button onClick={(e) => { e.stopPropagation(); removeField(key); }} className="text-text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"><FaTrash size={10} /></button>
                                                                         )}
                                                                     </div>
 
                                                                     {/* Expanded Controls for Selected Item */}
                                                                     {isSelected && (
-                                                                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pt-2 border-t border-white/5">
+                                                                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pt-2 border-t border-border-color">
 
                                                                             {/* FORM CONFIGURATION */}
-                                                                            <div className="bg-black/20 p-2 rounded mb-2">
-                                                                                <p className="text-[10px] uppercase font-bold text-slate-500 mb-2">Form Settings</p>
+                                                                            <div className="bg-bg-secondary p-2 rounded mb-2 border border-border-color">
+                                                                                <p className="text-[10px] uppercase font-bold text-text-muted mb-2">Form Settings</p>
                                                                                 <div className="space-y-2">
                                                                                     <div>
-                                                                                        <label className="text-[10px] text-slate-400">Label</label>
+                                                                                        <label className="text-[10px] text-text-muted">Label</label>
                                                                                         <input
                                                                                             type="text"
                                                                                             value={config.formFields?.[key]?.label || key.replace('_', ' ')}
@@ -469,11 +469,11 @@ const EventEditor = () => {
                                                                                                 ...config,
                                                                                                 formFields: { ...config.formFields, [key]: { ...(config.formFields?.[key] || {}), label: e.target.value } }
                                                                                             })}
-                                                                                            className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-xs text-white focus:border-primary outline-none"
+                                                                                            className="w-full bg-bg-primary border border-border-color rounded px-2 py-1 text-xs text-text-main focus:border-primary outline-none"
                                                                                         />
                                                                                     </div>
                                                                                     <div>
-                                                                                        <label className="text-[10px] text-slate-400">Placeholder</label>
+                                                                                        <label className="text-[10px] text-text-muted">Placeholder</label>
                                                                                         <input
                                                                                             type="text"
                                                                                             value={config.formFields?.[key]?.placeholder || ''}
@@ -482,7 +482,7 @@ const EventEditor = () => {
                                                                                                 formFields: { ...config.formFields, [key]: { ...(config.formFields?.[key] || {}), placeholder: e.target.value } }
                                                                                             })}
                                                                                             placeholder={`Enter ${key}...`}
-                                                                                            className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-xs text-white focus:border-primary outline-none"
+                                                                                            className="w-full bg-bg-primary border border-border-color rounded px-2 py-1 text-xs text-text-main focus:border-primary outline-none"
                                                                                         />
                                                                                     </div>
                                                                                     <div className="flex items-center gap-2">
@@ -496,31 +496,31 @@ const EventEditor = () => {
                                                                                             })}
                                                                                             className="accent-primary"
                                                                                         />
-                                                                                        <label htmlFor={`req-${key}`} className="text-xs text-slate-300">Required Field</label>
+                                                                                        <label htmlFor={`req-${key}`} className="text-xs text-text-muted">Required Field</label>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
 
                                                                             {['date', 'website', 'time', 'location', 'cta', 'address'].includes(key) && (
                                                                                 <div>
-                                                                                    <label className="text-[10px] text-slate-500 uppercase">Static Content</label>
+                                                                                    <label className="text-[10px] text-text-muted uppercase">Static Content</label>
                                                                                     <input
                                                                                         type="text"
                                                                                         value={config.posterElements?.[key] || ''}
                                                                                         onChange={(e) => setConfig({ ...config, posterElements: { ...config.posterElements, [key]: e.target.value } })}
                                                                                         placeholder="Content..."
-                                                                                        className="w-full bg-black/30 border border-white/10 rounded px-2 py-1.5 text-xs text-white mb-2 focus:border-primary outline-none"
+                                                                                        className="w-full bg-bg-primary border border-border-color rounded px-2 py-1.5 text-xs text-text-main mb-2 focus:border-primary outline-none"
                                                                                     />
                                                                                 </div>
                                                                             )}
 
                                                                             <div className="grid grid-cols-2 gap-2">
                                                                                 <div>
-                                                                                    <label className="text-[10px] text-slate-500 uppercase">Font</label>
+                                                                                    <label className="text-[10px] text-text-muted uppercase">Font</label>
                                                                                     <select
                                                                                         value={style.fontFamily}
                                                                                         onChange={(e) => setConfig({ ...config, typography: { ...config.typography, [key]: { ...style, fontFamily: e.target.value } } })}
-                                                                                        className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-xs text-slate-300 outline-none"
+                                                                                        className="w-full bg-bg-primary border border-border-color rounded px-2 py-1 text-xs text-text-muted outline-none"
                                                                                     >
                                                                                         <option value="Outfit">Outfit</option>
                                                                                         <option value="Inter">Inter</option>
@@ -528,11 +528,11 @@ const EventEditor = () => {
                                                                                     </select>
                                                                                 </div>
                                                                                 <div>
-                                                                                    <label className="text-[10px] text-slate-500 uppercase">Weight</label>
+                                                                                    <label className="text-[10px] text-text-muted uppercase">Weight</label>
                                                                                     <select
                                                                                         value={style.weight || 'normal'}
                                                                                         onChange={(e) => setConfig({ ...config, typography: { ...config.typography, [key]: { ...style, weight: e.target.value } } })}
-                                                                                        className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-xs text-slate-300 outline-none"
+                                                                                        className="w-full bg-bg-primary border border-border-color rounded px-2 py-1 text-xs text-text-muted outline-none"
                                                                                     >
                                                                                         <option value="normal">Reg</option>
                                                                                         <option value="bold">Bold</option>
@@ -546,20 +546,20 @@ const EventEditor = () => {
                                                                                     type="color"
                                                                                     value={style.color}
                                                                                     onChange={(e) => setConfig({ ...config, typography: { ...config.typography, [key]: { ...style, color: e.target.value } } })}
-                                                                                    className="w-8 h-6 rounded cursor-pointer bg-transparent border border-white/10"
+                                                                                    className="w-8 h-6 rounded cursor-pointer bg-transparent border border-border-color"
                                                                                 />
                                                                                 <input
                                                                                     type="number"
                                                                                     value={style.size}
                                                                                     onChange={(e) => setConfig({ ...config, typography: { ...config.typography, [key]: { ...style, size: parseInt(e.target.value) } } })}
-                                                                                    className="w-16 bg-black/30 border border-white/10 rounded px-2 py-1 text-xs text-white text-center"
+                                                                                    className="w-16 bg-bg-primary border border-border-color rounded px-2 py-1 text-xs text-text-main text-center"
                                                                                 />
-                                                                                <div className="flex bg-black/30 rounded border border-white/10 p-0.5 flex-1">
+                                                                                <div className="flex bg-bg-primary rounded border border-border-color p-0.5 flex-1">
                                                                                     {['left', 'center', 'right'].map(align => (
                                                                                         <button
                                                                                             key={align}
                                                                                             onClick={() => setConfig({ ...config, typography: { ...config.typography, [key]: { ...style, align } } })}
-                                                                                            className={`flex-1 py-1 rounded text-[10px] ${style.align === align ? 'bg-white/20 text-white' : 'text-slate-500 hover:text-white'}`}
+                                                                                            className={`flex-1 py-1 rounded text-[10px] ${style.align === align ? 'bg-text-main/20 text-text-main' : 'text-text-muted hover:text-text-main'}`}
                                                                                         >
                                                                                             {align === 'left' && <FaAlignLeft />}
                                                                                             {align === 'center' && <FaAlignCenter />}
@@ -581,42 +581,42 @@ const EventEditor = () => {
                                 </div>
 
                                 {/* 3. PHOTO SETTINGS */}
-                                <div className="bg-white/5 rounded-xl overflow-hidden border border-white/5">
-                                    <button onClick={() => toggleSection('photo')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
-                                        <span className="font-bold text-sm flex items-center gap-2"><FaCamera className="text-purple-400" /> Photo Settings</span>
-                                        {openSections.photo ? <FaChevronUp className="text-xs opacity-50" /> : <FaChevronDown className="text-xs opacity-50" />}
+                                <div className="bg-bg-tertiary rounded-xl overflow-hidden border border-border-color">
+                                    <button onClick={() => toggleSection('photo')} className="w-full flex items-center justify-between p-4 hover:bg-text-main/5 transition-colors">
+                                        <span className="font-bold text-sm text-text-main flex items-center gap-2"><FaCamera className="text-purple-400" /> Photo Settings</span>
+                                        {openSections.photo ? <FaChevronUp className="text-xs opacity-50 text-text-muted" /> : <FaChevronDown className="text-xs opacity-50 text-text-muted" />}
                                     </button>
                                     <AnimatePresence>
                                         {openSections.photo && (
                                             <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
                                                 <div className="p-4 pt-0">
                                                     <div className="mb-4">
-                                                        <label className="text-xs font-bold text-slate-500 block mb-2 uppercase">Shape</label>
-                                                        <div className="flex bg-black/20 rounded-lg p-1 border border-white/5">
+                                                        <label className="text-xs font-bold text-text-muted block mb-2 uppercase">Shape</label>
+                                                        <div className="flex bg-bg-primary rounded-lg p-1 border border-border-color">
                                                             <button
                                                                 onClick={() => setConfig({ ...config, coordinates: { ...config.coordinates, photo: { ...config.coordinates.photo, shape: 'circle' } } })}
-                                                                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${(!config.coordinates.photo?.shape || config.coordinates.photo.shape === 'circle') ? 'bg-primary text-white shadow' : 'text-slate-500 hover:text-white'}`}
+                                                                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${(!config.coordinates.photo?.shape || config.coordinates.photo.shape === 'circle') ? 'bg-primary text-white shadow' : 'text-text-muted hover:text-text-main'}`}
                                                             >
                                                                 Circle
                                                             </button>
                                                             <button
                                                                 onClick={() => setConfig({ ...config, coordinates: { ...config.coordinates, photo: { ...config.coordinates.photo, shape: 'square' } } })}
-                                                                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${config.coordinates.photo?.shape === 'square' ? 'bg-primary text-white shadow' : 'text-slate-500 hover:text-white'}`}
+                                                                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${config.coordinates.photo?.shape === 'square' ? 'bg-primary text-white shadow' : 'text-text-muted hover:text-text-main'}`}
                                                             >
                                                                 Square
                                                             </button>
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className="text-xs font-bold text-slate-500 block mb-2 uppercase flex justify-between">
+                                                        <label className="text-xs font-bold text-text-muted block mb-2 uppercase flex justify-between">
                                                             <span>Size (Radius)</span>
-                                                            <span className="text-white">{config.coordinates.photo?.radius}px</span>
+                                                            <span className="text-text-main">{config.coordinates.photo?.radius}px</span>
                                                         </label>
                                                         <input
                                                             type="range" min="50" max="400"
                                                             value={config.coordinates.photo?.radius || 150}
                                                             onChange={(e) => setConfig({ ...config, coordinates: { ...config.coordinates, photo: { ...config.coordinates.photo, radius: parseInt(e.target.value) } } })}
-                                                            className="w-full accent-primary h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                                                            className="w-full accent-primary h-1 bg-border-color rounded-lg appearance-none cursor-pointer"
                                                         />
                                                     </div>
                                                 </div>
@@ -626,10 +626,10 @@ const EventEditor = () => {
                                 </div>
 
                                 {/* 4. BRANDING */}
-                                <div className="bg-white/5 rounded-xl overflow-hidden border border-white/5">
-                                    <button onClick={() => toggleSection('branding')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
-                                        <span className="font-bold text-sm flex items-center gap-2"><FaPalette className="text-pink-400" /> Branding</span>
-                                        {openSections.branding ? <FaChevronUp className="text-xs opacity-50" /> : <FaChevronDown className="text-xs opacity-50" />}
+                                <div className="bg-bg-tertiary rounded-xl overflow-hidden border border-border-color">
+                                    <button onClick={() => toggleSection('branding')} className="w-full flex items-center justify-between p-4 hover:bg-text-main/5 transition-colors">
+                                        <span className="font-bold text-sm text-text-main flex items-center gap-2"><FaPalette className="text-pink-400" /> Branding</span>
+                                        {openSections.branding ? <FaChevronUp className="text-xs opacity-50 text-text-muted" /> : <FaChevronDown className="text-xs opacity-50 text-text-muted" />}
                                     </button>
                                     <AnimatePresence>
                                         {openSections.branding && (
@@ -637,7 +637,7 @@ const EventEditor = () => {
                                                 <div className="p-4 pt-0">
                                                     <div className="flex gap-3 mb-4">
                                                         {config.branding?.colors?.map((color, i) => (
-                                                            <div key={i} className="relative w-8 h-8 rounded-full overflow-hidden border border-white/20 hover:scale-110 transition-transform cursor-pointer shadow-lg">
+                                                            <div key={i} className="relative w-8 h-8 rounded-full overflow-hidden border border-border-color hover:scale-110 transition-transform cursor-pointer shadow-lg">
                                                                 <input
                                                                     type="color"
                                                                     value={color}
@@ -653,30 +653,30 @@ const EventEditor = () => {
                                                         ))}
                                                     </div>
 
-                                                    <div className="mt-6 border-t border-white/10 pt-4">
+                                                    <div className="mt-6 border-t border-border-color pt-4">
                                                         <div className="flex items-center justify-between mb-4">
-                                                            <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                                                            <label className="text-xs font-bold text-text-muted uppercase flex items-center gap-2">
                                                                 <FaQrcode /> QR Code
                                                             </label>
                                                             <button
                                                                 onClick={() => setConfig({ ...config, posterElements: { ...config.posterElements, qrEnabled: !config.posterElements?.qrEnabled } })}
-                                                                className={`w-10 h-5 rounded-full relative transition-colors ${config.posterElements?.qrEnabled ? 'bg-primary' : 'bg-white/10'}`}
+                                                                className={`w-10 h-5 rounded-full relative transition-colors ${config.posterElements?.qrEnabled ? 'bg-primary' : 'bg-bg-primary border border-border-color'}`}
                                                             >
-                                                                <span className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${config.posterElements?.qrEnabled ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                                                                <span className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${config.posterElements?.qrEnabled ? 'translate-x-5' : 'translate-x-0 bg-text-muted'}`}></span>
                                                             </button>
                                                         </div>
 
                                                         {config.posterElements?.qrEnabled && (
                                                             <div>
-                                                                <label className="text-xs font-bold text-slate-500 block mb-2 uppercase flex justify-between">
+                                                                <label className="text-xs font-bold text-text-muted block mb-2 uppercase flex justify-between">
                                                                     <span>Size</span>
-                                                                    <span className="text-white">{config.posterElements?.qrSize || 250}px</span>
+                                                                    <span className="text-text-main">{config.posterElements?.qrSize || 250}px</span>
                                                                 </label>
                                                                 <input
                                                                     type="range" min="100" max="500"
                                                                     value={config.posterElements?.qrSize || 250}
                                                                     onChange={(e) => setConfig({ ...config, posterElements: { ...config.posterElements, qrSize: parseInt(e.target.value) } })}
-                                                                    className="w-full accent-primary h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                                                                    className="w-full accent-primary h-1 bg-border-color rounded-lg appearance-none cursor-pointer"
                                                                 />
                                                             </div>
                                                         )}
@@ -691,16 +691,16 @@ const EventEditor = () => {
                         </div>
 
                         {/* CENTER: Canvas Workspace */}
-                        <div className="flex-1 bg-[#121212] relative overflow-hidden flex flex-col">
+                        <div className="flex-1 bg-bg-tertiary relative overflow-hidden flex flex-col">
 
                             {/* Floating Toolbar */}
-                            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-neutral-900/90 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-2xl transition-all hover:bg-neutral-900">
-                                <button onClick={undo} disabled={historyIndex <= 0} className="p-2 text-slate-400 hover:text-white disabled:opacity-30 tooltip" title="Undo"><FaUndo /></button>
-                                <button onClick={redo} disabled={historyIndex >= history.length - 1} className="p-2 text-slate-400 hover:text-white disabled:opacity-30 tooltip" title="Redo"><FaRedo /></button>
-                                <div className="w-px h-4 bg-white/10 mx-2"></div>
-                                <button onClick={() => setZoom(z => Math.max(0.1, z - 0.05))} className="p-2 text-slate-400 hover:text-white"><FaSearchMinus /></button>
-                                <span className="text-xs font-mono text-slate-500 w-12 text-center select-none">{Math.round(zoom * 100)}%</span>
-                                <button onClick={() => setZoom(z => Math.min(2, z + 0.05))} className="p-2 text-slate-400 hover:text-white"><FaSearchPlus /></button>
+                            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-bg-secondary/90 backdrop-blur-md px-4 py-2 rounded-full border border-border-color shadow-2xl transition-all hover:bg-bg-secondary">
+                                <button onClick={undo} disabled={historyIndex <= 0} className="p-2 text-text-muted hover:text-text-main disabled:opacity-30 tooltip" title="Undo"><FaUndo /></button>
+                                <button onClick={redo} disabled={historyIndex >= history.length - 1} className="p-2 text-text-muted hover:text-text-main disabled:opacity-30 tooltip" title="Redo"><FaRedo /></button>
+                                <div className="w-px h-4 bg-border-color mx-2"></div>
+                                <button onClick={() => setZoom(z => Math.max(0.1, z - 0.05))} className="p-2 text-text-muted hover:text-text-main"><FaSearchMinus /></button>
+                                <span className="text-xs font-mono text-text-muted w-12 text-center select-none">{Math.round(zoom * 100)}%</span>
+                                <button onClick={() => setZoom(z => Math.min(2, z + 0.05))} className="p-2 text-text-muted hover:text-text-main"><FaSearchPlus /></button>
                                 <button onClick={() => {
                                     // Smart Fit: Calculate exact zoom to fit container with padding
                                     const container = document.getElementById('canvas-container');
@@ -711,9 +711,9 @@ const EventEditor = () => {
                                         const optimal = Math.min(w / 1080, h / 1600);
                                         setZoom(Math.max(0.2, Math.min(1.5, optimal)));
                                     }
-                                }} className="p-2 text-slate-400 hover:text-white" title="Fit to Screen"><FaCompress /></button>
-                                <div className="w-px h-4 bg-white/10 mx-2"></div>
-                                <button onClick={() => setShowGrid(!showGrid)} className={`p-2 rounded transition-colors ${showGrid ? 'text-primary bg-primary/10' : 'text-slate-400 hover:text-white'}`} title="Toggle Grid"><FaMagnet /></button>
+                                }} className="p-2 text-text-muted hover:text-text-main" title="Fit to Screen"><FaCompress /></button>
+                                <div className="w-px h-4 bg-border-color mx-2"></div>
+                                <button onClick={() => setShowGrid(!showGrid)} className={`p-2 rounded transition-colors ${showGrid ? 'text-primary bg-primary/10' : 'text-text-muted hover:text-text-main'}`} title="Toggle Grid"><FaMagnet /></button>
                             </div>
 
                             {/* Scrollable Area */}
@@ -723,7 +723,7 @@ const EventEditor = () => {
                                 <div style={{ width: 1080 * zoom, height: 1600 * zoom, transition: 'width 0.2s, height 0.2s' }} className="relative flex-shrink-0">
                                     <div
                                         ref={imageRef}
-                                        className="absolute top-0 left-0 bg-white shadow-2xl border border-white/5 origin-top-left transition-transform duration-200 ease-out"
+                                        className="absolute top-0 left-0 bg-white shadow-2xl border border-border-color origin-top-left transition-transform duration-200 ease-out"
                                         style={{
                                             width: '1080px',
                                             height: '1600px',
