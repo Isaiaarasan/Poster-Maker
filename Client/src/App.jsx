@@ -21,7 +21,11 @@ function App() {
   useEffect(() => {
     // Apply Theme from LocalStorage
     const theme = localStorage.getItem('pm_themeMode') || 'dark';
-    const color = localStorage.getItem('pm_primaryColor') || '#8b5cf6';
+    const primary = localStorage.getItem('pm_primaryColor') || '#8b5cf6';
+    const secondary = localStorage.getItem('pm_secondaryColor') || '#3b82f6';
+    const bgPrimary = localStorage.getItem('pm_bgPrimary');
+    const bgSecondary = localStorage.getItem('pm_bgSecondary');
+    const textMain = localStorage.getItem('pm_textMain');
 
     if (theme === 'light') {
       document.documentElement.classList.add('light');
@@ -29,12 +33,16 @@ function App() {
       document.documentElement.classList.remove('light');
     }
 
-    document.documentElement.style.setProperty('--primary', color);
+    // Apply Colors
+    document.documentElement.style.setProperty('--primary', primary);
+    document.documentElement.style.setProperty('--secondary', secondary);
+    if (bgPrimary) document.documentElement.style.setProperty('--bg-primary', bgPrimary);
+    if (bgSecondary) document.documentElement.style.setProperty('--bg-secondary', bgSecondary);
+    if (textMain) document.documentElement.style.setProperty('--text-main', textMain);
 
-    // Calculate and set variations (simple version)
-    // In a real app, you might use a library to darken/lighten
-    document.documentElement.style.setProperty('--primary-light', color);
-    document.documentElement.style.setProperty('--primary-dark', color);
+    // Derived colors (simplified)
+    document.documentElement.style.setProperty('--primary-light', primary);
+    document.documentElement.style.setProperty('--primary-dark', primary);
 
   }, []);
 

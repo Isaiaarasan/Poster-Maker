@@ -6,12 +6,18 @@
   --color-primary-light: var(--primary-light);
   --color-primary-dark: var(--primary-dark);
 
+  --color-secondary: var(--secondary);
+
   --color-bg-primary: var(--bg-primary);
   --color-bg-secondary: var(--bg-secondary);
   --color-bg-tertiary: var(--bg-tertiary);
 
   --color-text-main: var(--text-main);
   --color-text-muted: var(--text-muted);
+  --color-border: var(--border-color);
+
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
 }
 
 :root {
@@ -20,12 +26,19 @@
   --primary-light: #a78bfa;
   --primary-dark: #7c3aed;
 
+  --secondary: #3b82f6;
+  /* Default Blue */
+
   --bg-primary: #050505;
   --bg-secondary: #0f0f11;
   --bg-tertiary: #18181b;
 
   --text-main: #ffffff;
   --text-muted: #94a3b8;
+  --border-color: rgba(255, 255, 255, 0.1);
+
+  --glass-bg: rgba(0, 0, 0, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.1);
 }
 
 :root.light {
@@ -40,6 +53,13 @@
   /* Slate-900 */
   --text-muted: #64748b;
   /* Slate-500 */
+  --border-color: #e2e8f0;
+  /* Slate-200 */
+
+  --glass-bg: rgba(241, 245, 249, 0.6);
+  /* Slate-100 with opacity */
+  --glass-border: rgba(148, 163, 184, 0.2);
+  /* Slate-400 with opacity */
 }
 
 body {
@@ -47,6 +67,8 @@ body {
   background-color: var(--color-bg-primary);
   color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
+  background-image: radial-gradient(var(--color-border) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 /* Glassmorphism Utilities Dark Theme */

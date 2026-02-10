@@ -139,7 +139,6 @@ const EventEditor = () => {
             }
 
             e.preventDefault();
-            updateCoordinate(selectedField, x, y);
         };
 
         window.addEventListener('keydown', handleKeyDown);
