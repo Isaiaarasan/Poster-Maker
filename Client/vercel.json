@@ -1,8 +1,12 @@
 {
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/"
-    }
-  ]
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "https://poster-maker-x0kp.onrender.com/api/$1"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/"
+        }
+    ]
 }

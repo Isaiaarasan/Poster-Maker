@@ -100,6 +100,7 @@ const PublicEventPage = () => {
             const fabricInstance = fabric.fabric || fabric;
 
             const { config } = event;
+            if (!config) return;
 
             // IMMEDIATE BASE LAYER: White Background
             const baseRect = new fabricInstance.Rect({
@@ -148,7 +149,7 @@ const PublicEventPage = () => {
             }
 
             // LAYER 2: Photo
-            if (config.coordinates.photo && photoPreview) {
+            if (config.coordinates?.photo && photoPreview) {
                 try {
                     const { x, y, radius, shape } = config.coordinates.photo;
                     const photoImg = await new Promise((resolve) => {
@@ -198,7 +199,7 @@ const PublicEventPage = () => {
             }
 
             // LAYER 3: Text Fields
-            const fields = Object.keys(config.coordinates).filter(k => k !== 'photo');
+            const fields = Object.keys(config.coordinates || {}).filter(k => k !== 'photo');
             fields.forEach(key => {
                 let text = formData[key] || '';
                 // Fallback to static config or placeholder
@@ -361,7 +362,7 @@ const PublicEventPage = () => {
         </div>
     );
 
-    if (!event) return <div className="h-screen bg-black text-white flex items-center justify-center">Event not found</div>;
+    if (!event || !event.config?.coordinates) return <div className="h-screen bg-black text-white flex items-center justify-center">Event data incomplete</div>;
 
     const fields = Object.keys(event.config.coordinates).filter(k => k !== 'photo');
     const primaryColor = event.config.branding?.colors?.[2] || '#8b5cf6';
