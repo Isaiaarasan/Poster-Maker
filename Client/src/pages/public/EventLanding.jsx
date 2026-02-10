@@ -373,7 +373,7 @@ const PublicEventPage = () => {
     const secondaryColor = event.config.branding?.colors?.[1] || '#6d28d9';
 
     return (
-        <div className="min-h-screen bg-bg-primary text-white font-sans flex flex-col md:flex-row overflow-hidden relative" style={{ backgroundColor: event.config.branding?.colors?.[0] || '#09090b', color: event.config.branding?.colors?.[1] === '#ffffff' ? '#000' : '#fff' }}>
+        <div className="min-h-screen bg-bg-primary text-text-main font-sans flex flex-col md:flex-row overflow-hidden relative" style={{ backgroundColor: event.config.branding?.colors?.[0] || 'var(--bg-primary)', color: 'var(--text-main)' }}>
 
             {/* Background Ambience */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -382,12 +382,12 @@ const PublicEventPage = () => {
             </div>
 
             {/* LEFT PANEL: INPUT */}
-            <div className="w-full md:w-5/12 p-6 md:p-12 relative z-10 flex flex-col h-full overflow-y-auto custom-scrollbar backdrop-blur-sm bg-black/20 border-r border-white/5">
+            <div className="w-full md:w-5/12 p-6 md:p-12 relative z-10 flex flex-col h-full overflow-y-auto custom-scrollbar backdrop-blur-md bg-glass-bg border-r border-glass-border">
                 <div className="mb-8">
-                    <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 mb-2">
+                    <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-main to-text-muted mb-2">
                         {event.title}
                     </h1>
-                    <p className="text-sm text-slate-400">Create your official event badge in seconds.</p>
+                    <p className="text-sm text-text-muted">Create your official event badge in seconds.</p>
                 </div>
 
                 <AnimatePresence mode='wait'>
@@ -437,7 +437,7 @@ const PublicEventPage = () => {
 
                                     return (
                                         <div key={key}>
-                                            <label className="block text-xs uppercase tracking-widest text-slate-500 mb-2">
+                                            <label className="block text-xs uppercase tracking-widest text-text-muted mb-2 font-bold">
                                                 {label} {isRequired && <span className="text-red-500">*</span>}
                                             </label>
                                             <input
@@ -447,10 +447,10 @@ const PublicEventPage = () => {
                                                 value={formData[key] || ''}
                                                 onChange={handleInputChange}
                                                 placeholder={placeholder}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:bg-white/10 transition-all font-medium placeholder:text-slate-600"
-                                                style={{ borderColor: 'rgba(255,255,255,0.1)' }}
-                                                onFocus={(e) => e.target.style.borderColor = primaryColor || '#8b5cf6'}
-                                                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                                                className="w-full bg-glass-bg border border-glass-border rounded-xl px-4 py-3.5 text-text-main focus:outline-none focus:bg-glass-bg transition-all font-medium placeholder:text-text-main/50"
+                                                style={{ borderColor: 'var(--glass-border)' }}
+                                                onFocus={(e) => e.target.style.borderColor = primaryColor || 'var(--primary)'}
+                                                onBlur={(e) => e.target.style.borderColor = 'var(--glass-border)'}
                                             />
                                         </div>
                                     );
@@ -460,18 +460,18 @@ const PublicEventPage = () => {
                             {/* Photo Upload */}
                             {event.config.coordinates.photo && (
                                 <div>
-                                    <label className="block text-xs uppercase tracking-widest text-slate-500 mb-2">Profile Photo <span className="text-red-500">*</span></label>
+                                    <label className="block text-xs uppercase tracking-widest text-text-muted mb-2 font-bold">Profile Photo <span className="text-red-500">*</span></label>
                                     <div className="flex items-center gap-4">
                                         <label className="flex-1 cursor-pointer group relative overflow-hidden rounded-xl">
                                             <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
                                             <div
-                                                className="h-28 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center gap-2 transition-all bg-white/5"
-                                                style={{ borderColor: 'rgba(255,255,255,0.1)' }}
-                                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.backgroundColor = primaryColor + '10'; }}
-                                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; }}
+                                                className="h-28 border-2 border-dashed border-glass-border rounded-xl flex flex-col items-center justify-center gap-2 transition-all bg-glass-bg"
+                                                style={{ borderColor: 'var(--glass-border)' }}
+                                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--glass-border)'; e.currentTarget.style.backgroundColor = 'var(--glass-bg)'; }}
                                             >
-                                                <FaCamera className="text-2xl text-slate-400 group-hover:text-white" />
-                                                <div className="text-xs text-slate-400 group-hover:text-white font-medium">
+                                                <FaCamera className="text-2xl text-text-main/70 group-hover:text-text-main" />
+                                                <div className="text-xs text-text-main/70 group-hover:text-text-main font-medium">
                                                     {photoPreview ? "Change Photo" : "Upload Selfie"}
                                                 </div>
                                             </div>
@@ -487,7 +487,7 @@ const PublicEventPage = () => {
 
                             <button
                                 onClick={submitLeadAndGenerate}
-                                style={{ background: `linear-gradient(to right, ${primaryColor || '#8b5cf6'}, ${secondaryColor || '#6d28d9'})` }}
+                                style={{ background: `linear-gradient(to right, ${primaryColor || '#8b5cf6'}, ${secondaryColor || '#3b82f6'})` }}
                                 className="w-full py-4 text-white font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 text-lg shadow-primary/25"
                             >
                                 <FaMagic /> Generate Badge

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { FaPlus, FaSearch, FaEdit, FaEye, FaCopy } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaEdit, FaEye, FaCopy, FaTrash } from 'react-icons/fa';
 
 const Events = () => {
     const [events, setEvents] = useState([]);
@@ -41,6 +41,19 @@ const Events = () => {
             console.error("Failed to update status", err);
             // Revert on failure
             fetchEvents();
+        }
+    };
+
+    const handleDelete = async (e, eventId) => {
+        e.stopPropagation();
+        if (window.confirm("Are you sure you want to delete this event? This action cannot be undone.")) {
+            try {
+                await axios.delete(`/api/events/${eventId}`);
+                setEvents(events.filter(ev => ev._id !== eventId));
+            } catch (err) {
+                console.error("Failed to delete event", err);
+                alert("Failed to delete event");
+            }
         }
     };
 
@@ -86,14 +99,21 @@ const Events = () => {
                             >
                                 <FaEye />
                             </button>
+                            <button
+                                onClick={(e) => handleDelete(e, event._id)}
+                                className="p-2 bg-white/10 rounded-lg text-white hover:bg-red-500 backdrop-blur-sm transition-colors"
+                                title="Delete"
+                            >
+                                <FaTrash />
+                            </button>
                         </div>
 
                         <div className="mb-4">
                             <button
                                 onClick={(e) => toggleStatus(e, event)}
                                 className={`px-3 py-1 rounded-full text-xs font-bold border transition-all z-20 relative ${event.status === 'published'
-                                        ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
-                                        : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20'
+                                    ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
+                                    : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20'
                                     }`}
                             >
                                 {event.status === 'published' ? '● PUBLISHED' : '○ DRAFT'}
