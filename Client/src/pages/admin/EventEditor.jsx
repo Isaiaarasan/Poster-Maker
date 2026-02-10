@@ -616,7 +616,7 @@ const EventEditor = () => {
                                                             type="range" min="50" max="400"
                                                             value={config.coordinates.photo?.radius || 150}
                                                             onChange={(e) => setConfig({ ...config, coordinates: { ...config.coordinates, photo: { ...config.coordinates.photo, radius: parseInt(e.target.value) } } })}
-                                                            className="w-full accent-primary h-1 bg-border-color rounded-lg appearance-none cursor-pointer"
+                                                            className="w-full accent-primary cursor-pointer bg-transparent py-2"
                                                         />
                                                     </div>
                                                 </div>
@@ -676,7 +676,7 @@ const EventEditor = () => {
                                                                     type="range" min="100" max="500"
                                                                     value={config.posterElements?.qrSize || 250}
                                                                     onChange={(e) => setConfig({ ...config, posterElements: { ...config.posterElements, qrSize: parseInt(e.target.value) } })}
-                                                                    className="w-full accent-primary h-1 bg-border-color rounded-lg appearance-none cursor-pointer"
+                                                                    className="w-full accent-primary cursor-pointer bg-transparent py-2"
                                                                 />
                                                             </div>
                                                         )}
