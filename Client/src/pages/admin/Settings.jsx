@@ -7,6 +7,14 @@ const Settings = () => {
   const [loading, setLoading] = useState(false);
 
   // Load initial state or defaults
+  // Load initial state or defaults
+  const getInitialThemeMode = () => localStorage.getItem("pm_themeMode") || "dark";
+  const getInitialTextMain = () => {
+    const stored = localStorage.getItem("pm_textMain");
+    if (stored) return stored;
+    return getInitialThemeMode() === "light" ? "#0f172a" : "#ffffff";
+  };
+
   const [settings, setSettings] = useState({
     appName: localStorage.getItem("pm_appName") || "Poster Maker",
     supportEmail:
@@ -15,8 +23,9 @@ const Settings = () => {
     secondaryColor: localStorage.getItem("pm_secondaryColor") || "#3b82f6",
     bgPrimary: localStorage.getItem("pm_bgPrimary") || "#050505",
     bgSecondary: localStorage.getItem("pm_bgSecondary") || "#0f0f11",
-    themeMode: localStorage.getItem("pm_themeMode") || "dark",
+    themeMode: getInitialThemeMode(),
     themeName: localStorage.getItem("pm_themeName") || "custom",
+    textMain: getInitialTextMain(),
     privacyUrl: localStorage.getItem("pm_privacyUrl") || "",
     termsUrl: localStorage.getItem("pm_termsUrl") || "",
   });
@@ -61,7 +70,12 @@ const Settings = () => {
     }
 
     // Normal handling for other keys
-    setSettings((prev) => ({ ...prev, [key]: value }));
+    // If changing colors manually, set themeName to custom
+    const additionalUpdates = ["primaryColor", "secondaryColor", "bgPrimary", "bgSecondary", "textMain"].includes(key)
+      ? { themeName: "custom" }
+      : {};
+
+    setSettings((prev) => ({ ...prev, [key]: value, ...additionalUpdates }));
 
     // Real-time preview
     if (key === "primaryColor") root.style.setProperty("--primary", value);
@@ -71,162 +85,102 @@ const Settings = () => {
     if (key === "textMain") root.style.setProperty("--text-main", value);
   };
 
-  const applyAlexaTheme = () => {
-    const alexaColors = {
-      primaryColor: "#05A0D1", // Alexa Blue
-      bgPrimary: "#000000", // Black
-      bgSecondary: "#232F3E", // Squid Ink
+  // Centralized theme map for brand themes
+  const themeMap = {
+    Alexa: {
+      primaryColor: "#05A0D1",
+      bgPrimary: "#000000",
+      bgSecondary: "#232F3E",
       textMain: "#FAFAFA",
       themeMode: "dark",
-    };
-
-    setSettings((prev) => ({ ...prev, ...alexaColors }));
-
-    // Apply immediately
-    const root = document.documentElement;
-    root.style.setProperty("--primary", alexaColors.primaryColor);
-    root.style.setProperty("--bg-primary", alexaColors.bgPrimary);
-    root.style.setProperty("--bg-secondary", alexaColors.bgSecondary);
-    root.style.setProperty("--text-main", alexaColors.textMain);
-    root.style.setProperty("--border-color", "rgba(255, 255, 255, 0.1)");
-    root.classList.remove("light");
-  };
-
-  const applyNetflixTheme = () => {
-    const netflixColors = {
-      primaryColor: "#E50914", // Netflix Red
+      secondaryColor: "#3b82f6",
+    },
+    Netflix: {
+      primaryColor: "#E50914",
       secondaryColor: "#221f1f",
       bgPrimary: "#000000",
       bgSecondary: "#141414",
       textMain: "#FFFFFF",
       themeMode: "dark",
-    };
-
-    setSettings((prev) => ({ ...prev, ...netflixColors }));
-
-    const root = document.documentElement;
-    root.style.setProperty("--primary", netflixColors.primaryColor);
-    root.style.setProperty("--secondary", netflixColors.secondaryColor);
-    root.style.setProperty("--bg-primary", netflixColors.bgPrimary);
-    root.style.setProperty("--bg-secondary", netflixColors.bgSecondary);
-    root.style.setProperty("--text-main", netflixColors.textMain);
-    root.style.setProperty("--border-color", "rgba(255, 255, 255, 0.08)");
-    root.classList.remove("light");
-  };
-
-  const applyFlipkartTheme = () => {
-    const flipColors = {
-      primaryColor: "#2874F0", // Flipkart Blue
-      secondaryColor: "#FFCC00", // Flipkart Yellow
+    },
+    Flipkart: {
+      primaryColor: "#2874F0",
+      secondaryColor: "#FFCC00",
       bgPrimary: "#FFFFFF",
       bgSecondary: "#F8FAFC",
       textMain: "#0F172A",
       themeMode: "light",
-    };
+    },
+    YouTube: {
+      primaryColor: "#FF0000",
+      secondaryColor: "#282828",
+      bgPrimary: "#FFFFFF",
+      bgSecondary: "#F9F9F9",
+      textMain: "#0F172A",
+      themeMode: "light",
+    },
+    Instagram: {
+      primaryColor: "#E1306C",
+      secondaryColor: "#405DE6",
+      bgPrimary: "#FFFFFF",
+      bgSecondary: "#FFF7FA",
+      textMain: "#0F172A",
+      themeMode: "light",
+    },
+    Facebook: {
+      primaryColor: "#1877F2",
+      secondaryColor: "#4267B2",
+      bgPrimary: "#FFFFFF",
+      bgSecondary: "#F2F6FF",
+      textMain: "#0F172A",
+      themeMode: "light",
+    },
+    Threads: {
+      primaryColor: "#00AF87",
+      secondaryColor: "#2DCCB7",
+      bgPrimary: "#0F172A",
+      bgSecondary: "#071521",
+      textMain: "#FFFFFF",
+      themeMode: "dark",
+    },
+    Snapchat: {
+      primaryColor: "#FFFC00",
+      secondaryColor: "#000000",
+      bgPrimary: "#FFFFFF",
+      bgSecondary: "#FFFDF0",
+      textMain: "#0F172A",
+      themeMode: "light",
+    },
+  };
 
-    // Centralized theme map for brand themes
-    const themeMap = {
-      Alexa: {
-        primaryColor: "#05A0D1",
-        bgPrimary: "#000000",
-        bgSecondary: "#232F3E",
-        textMain: "#FAFAFA",
-        themeMode: "dark",
-        secondaryColor: "#3b82f6",
-      },
-      Netflix: {
-        primaryColor: "#E50914",
-        secondaryColor: "#221f1f",
-        bgPrimary: "#000000",
-        bgSecondary: "#141414",
-        textMain: "#FFFFFF",
-        themeMode: "dark",
-      },
-      Flipkart: {
-        primaryColor: "#2874F0",
-        secondaryColor: "#FFCC00",
-        bgPrimary: "#FFFFFF",
-        bgSecondary: "#F8FAFC",
-        textMain: "#0F172A",
-        themeMode: "light",
-      },
-      YouTube: {
-        primaryColor: "#FF0000",
-        secondaryColor: "#282828",
-        bgPrimary: "#FFFFFF",
-        bgSecondary: "#F9F9F9",
-        textMain: "#0F172A",
-        themeMode: "light",
-      },
-      Instagram: {
-        primaryColor: "#E1306C",
-        secondaryColor: "#405DE6",
-        bgPrimary: "#FFFFFF",
-        bgSecondary: "#FFF7FA",
-        textMain: "#0F172A",
-        themeMode: "light",
-      },
-      Facebook: {
-        primaryColor: "#1877F2",
-        secondaryColor: "#4267B2",
-        bgPrimary: "#FFFFFF",
-        bgSecondary: "#F2F6FF",
-        textMain: "#0F172A",
-        themeMode: "light",
-      },
-      Threads: {
-        primaryColor: "#00AF87",
-        secondaryColor: "#2DCCB7",
-        bgPrimary: "#0F172A",
-        bgSecondary: "#071521",
-        textMain: "#FFFFFF",
-        themeMode: "dark",
-      },
-      Snapchat: {
-        primaryColor: "#FFFC00",
-        secondaryColor: "#000000",
-        bgPrimary: "#FFFFFF",
-        bgSecondary: "#FFFDF0",
-        textMain: "#0F172A",
-        themeMode: "light",
-      },
-    };
+  const applyTheme = (name) => {
+    if (name === "custom") {
+      setSettings((prev) => ({ ...prev, themeName: "custom" }));
+      return;
+    }
 
-    const applyTheme = (name) => {
-      const t = themeMap[name];
-      if (!t) return;
+    const t = themeMap[name];
+    if (!t) return;
 
-      const themeData = { ...t, themeName: name };
-      setSettings((prev) => ({ ...prev, ...themeData }));
-
-      const root = document.documentElement;
-      if (t.primaryColor) root.style.setProperty("--primary", t.primaryColor);
-      if (t.secondaryColor)
-        root.style.setProperty("--secondary", t.secondaryColor);
-      if (t.bgPrimary) root.style.setProperty("--bg-primary", t.bgPrimary);
-      if (t.bgSecondary)
-        root.style.setProperty("--bg-secondary", t.bgSecondary);
-      if (t.textMain) root.style.setProperty("--text-main", t.textMain);
-
-      if (t.themeMode === "light") {
-        root.classList.add("light");
-        root.style.setProperty("--border-color", "#e2e8f0");
-      } else {
-        root.classList.remove("light");
-        root.style.setProperty("--border-color", "rgba(255, 255, 255, 0.1)");
-      }
-    };
-
-    setSettings((prev) => ({ ...prev, ...flipColors }));
+    const themeData = { ...t, themeName: name };
+    setSettings((prev) => ({ ...prev, ...themeData }));
 
     const root = document.documentElement;
-    root.style.setProperty("--primary", flipColors.primaryColor);
-    root.style.setProperty("--secondary", flipColors.secondaryColor);
-    root.style.setProperty("--bg-primary", flipColors.bgPrimary);
-    root.style.setProperty("--bg-secondary", flipColors.bgSecondary);
-    root.style.setProperty("--text-main", flipColors.textMain);
-    root.style.setProperty("--border-color", "#e2e8f0");
-    root.classList.add("light");
+    if (t.primaryColor) root.style.setProperty("--primary", t.primaryColor);
+    if (t.secondaryColor)
+      root.style.setProperty("--secondary", t.secondaryColor);
+    if (t.bgPrimary) root.style.setProperty("--bg-primary", t.bgPrimary);
+    if (t.bgSecondary)
+      root.style.setProperty("--bg-secondary", t.bgSecondary);
+    if (t.textMain) root.style.setProperty("--text-main", t.textMain);
+
+    if (t.themeMode === "light") {
+      root.classList.add("light");
+      root.style.setProperty("--border-color", "#e2e8f0");
+    } else {
+      root.classList.remove("light");
+      root.style.setProperty("--border-color", "rgba(255, 255, 255, 0.1)");
+    }
   };
 
   const handleSave = () => {
@@ -252,11 +206,10 @@ const Settings = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-                activeTab === tab.id
-                  ? "bg-primary text-white shadow-lg shadow-primary/20"
-                  : "text-slate-400 hover:text-text-main hover:bg-bg-secondary"
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === tab.id
+                ? "bg-primary text-white shadow-lg shadow-primary/20"
+                : "text-slate-400 hover:text-text-main hover:bg-bg-secondary"
+                }`}
             >
               {tab.icon}
               {tab.label}
@@ -348,7 +301,7 @@ const Settings = () => {
                         <option value="Snapchat">Snapchat</option>
                       </select>
 
-                      <button
+                      {/* <button
                         onClick={() => applyTheme("Alexa")}
                         className="px-3 py-2 bg-[#05A0D1] text-white text-xs font-bold rounded-lg hover:brightness-110 flex items-center gap-2 shadow-lg shadow-[#05A0D1]/20"
                       >
@@ -367,7 +320,7 @@ const Settings = () => {
                         className="px-3 py-2 bg-[#2874F0] text-white text-xs font-bold rounded-lg hover:brightness-110 flex items-center gap-2 shadow-lg shadow-[#2874F0]/20"
                       >
                         <FaPalette /> Flipkart
-                      </button>
+                      </button> */}
                     </div>
                   </div>
 
