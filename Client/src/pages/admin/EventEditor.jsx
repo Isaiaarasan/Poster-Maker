@@ -14,19 +14,17 @@ const EventEditor = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState('');
-    const [activeTab, setActiveTab] = useState('config'); // config | leads
+    const [activeTab, setActiveTab] = useState('config'); 
 
-    // Editor State
     const [selectedField, setSelectedField] = useState(null);
     const [bgFile, setBgFile] = useState(null);
     const [bgPreview, setBgPreview] = useState(null);
-    const [zoom, setZoom] = useState(0.4); // Initial default zoom
+    const [zoom, setZoom] = useState(0.4); 
     const [showGrid, setShowGrid] = useState(false);
     const [history, setHistory] = useState([]);
     const [historyIndex, setHistoryIndex] = useState(-1);
     const imageRef = useRef(null);
 
-    // Accordion State
     const [openSections, setOpenSections] = useState({
         assets: true,
         layers: true,
@@ -43,9 +41,8 @@ const EventEditor = () => {
             photo: { x: 540, y: 960, radius: 150, shape: 'circle' }, // Center photo
         },
         typography: {},
-        validation: {}, // required fields
+        validation: {}, 
         posterElements: {
-            // Default Static Content
             website: 'WWW.TECHCONF.COM',
             address: 'ADDRESS',
             time: '', location: '', cta: '', qrEnabled: true, qrSize: 250
@@ -59,7 +56,6 @@ const EventEditor = () => {
     const [newFieldName, setNewFieldName] = useState('');
     const [dragging, setDragging] = useState(null);
 
-    // History Management
     useEffect(() => {
         if (history.length === 0 && config) {
             setHistory([JSON.stringify(config)]);
@@ -67,7 +63,6 @@ const EventEditor = () => {
         }
     }, [loading]);
 
-    // Auto-save history on config change (debounced)
     useEffect(() => {
         const timer = setTimeout(() => {
             if (history[historyIndex] !== JSON.stringify(config)) {
@@ -97,28 +92,23 @@ const EventEditor = () => {
         }
     };
 
-    // Auto-Fit Zoom on Load
     useEffect(() => {
-        // Wait a bit for layout to settle
         const timer = setTimeout(() => {
             const container = document.getElementById('canvas-container');
             if (container) {
-                const padding = 80; // Padding around the canvas
+                const padding = 80; 
                 const w = container.clientWidth - padding;
                 const h = container.clientHeight - padding;
-                // Calculate scale to fit 1080x1600 into available space
                 const optimal = Math.min(w / 1080, h / 1600);
-                setZoom(Math.max(0.2, Math.min(1.5, optimal))); // Clamp between 0.2 and 1.5
+                setZoom(Math.max(0.2, Math.min(1.5, optimal))); 
             }
         }, 500);
         return () => clearTimeout(timer);
     }, [loading, activeTab]);
 
     useEffect(() => {
-        // Keyboard shortcuts for nudging
         const handleKeyDown = (e) => {
             if (!selectedField || !config.coordinates[selectedField]) return;
-            // Only if not typing in an input
             if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
 
             const { x, y } = config.coordinates[selectedField];
@@ -154,7 +144,6 @@ const EventEditor = () => {
             const res = await axios.get(`/api/events/${id}?byId=true`);
             setEvent(res.data);
             if (res.data.config) {
-                // Merge defaults to avoid crashes if old data is missing keys
                 setConfig(prev => ({ ...prev, ...res.data.config }));
                 setBgPreview(res.data.config.backgroundImageUrl);
             }
@@ -225,7 +214,6 @@ const EventEditor = () => {
     };
 
     const handleCanvasClick = (e) => {
-        // If clicking background (not an item), deselect
         if (e.target === imageRef.current || e.target.tagName === 'IMG') {
             setSelectedField(null);
         }
@@ -310,12 +298,11 @@ const EventEditor = () => {
         if (selectedField === key) setSelectedField(null);
     };
 
-    // Render Logic
     if (loading) return <div className="flex items-center justify-center h-full text-slate-500">Loading Editor...</div>;
 
     return (
         <div className="flex flex-col h-full bg-bg-primary text-text-main overflow-hidden">
-            {/* Toolbar Header */}
+
             <div className="h-16 border-b border-border-color bg-bg-secondary flex items-center justify-between px-6 shrink-0">
                 <div className="flex items-center gap-4">
                     <Link to="/admin/events" className="p-2 hover:bg-text-main/5 rounded-full text-text-muted hover:text-text-main transition-colors">
@@ -363,12 +350,10 @@ const EventEditor = () => {
                 </div>
             </div>
 
-            {/* Main Workspace */}
             <div className="flex-1 flex overflow-hidden">
 
                 {activeTab === 'config' ? (
                     <>
-                        {/* LEFT: Tools Panel (Accordion) */}
                         <div className="w-[360px] bg-bg-secondary border-r border-border-color flex flex-col z-20 shadow-xl">
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
 

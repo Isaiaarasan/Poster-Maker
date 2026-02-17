@@ -69,15 +69,12 @@ const Settings = () => {
       return;
     }
 
-    // Normal handling for other keys
-    // If changing colors manually, set themeName to custom
     const additionalUpdates = ["primaryColor", "secondaryColor", "bgPrimary", "bgSecondary", "textMain"].includes(key)
       ? { themeName: "custom" }
       : {};
 
     setSettings((prev) => ({ ...prev, [key]: value, ...additionalUpdates }));
 
-    // Real-time preview
     if (key === "primaryColor") root.style.setProperty("--primary", value);
     if (key === "secondaryColor") root.style.setProperty("--secondary", value);
     if (key === "bgPrimary") root.style.setProperty("--bg-primary", value);
@@ -85,7 +82,6 @@ const Settings = () => {
     if (key === "textMain") root.style.setProperty("--text-main", value);
   };
 
-  // Centralized theme map for brand themes
   const themeMap = {
     Alexa: {
       primaryColor: "#05A0D1",

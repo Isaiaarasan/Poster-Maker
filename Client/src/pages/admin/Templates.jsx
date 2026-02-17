@@ -38,7 +38,6 @@ const Templates = () => {
             });
 
             if (templateConfig) {
-                // Apply template config if provided
                 await axios.put(`/api/events/${res.data._id}/config`, {
                     branding: JSON.stringify(templateConfig.branding)
                 });
@@ -55,7 +54,6 @@ const Templates = () => {
 
     return (
         <div className="space-y-8 pb-20">
-            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Template Library</h1>

@@ -16,7 +16,6 @@ const Home = () => {
     return (
         <div className="bg-bg-primary min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden text-text-main font-sans">
 
-            {/* Background Orbs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <motion.div
                     animate={{ x: [0, 100, 0], y: [0, -100, 0] }}
@@ -32,7 +31,6 @@ const Home = () => {
 
             <div className="max-w-xl w-full relative z-10">
 
-                {/* Header Logo Area */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -54,7 +52,6 @@ const Home = () => {
                     </p>
                 </motion.div>
 
-                {/* Main Card */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -94,13 +91,11 @@ const Home = () => {
                             onClick={() => navigate('/admin/login')}
                             className="text-xs text-text-muted hover:text-text-main transition-colors flex items-center gap-1"
                         >
-                            {/* Secure Login &rarr; */}
                         </button>
                     </div>
                 </motion.div>
             </div>
 
-            {/* Footer */}
             <div className="absolute bottom-6 text-center w-full">
                 <p className="text-[10px] text-white/20 uppercase tracking-[0.2em] font-mono">System v2.0 // Ready</p>
             </div>
